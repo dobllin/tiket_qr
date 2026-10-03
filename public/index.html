@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendaftaran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .wrap { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .hero { background: var(--ink); color: #fff; padding: 56px 48px; display: flex; flex-direction: column; justify-content: space-between; }
+  .hero h1 { color: #fff; font-size: clamp(30px, 4.2vw, 48px); font-weight: 700; letter-spacing: -0.5px; margin: 18px 0 14px; }
+  .hero .meta { color: #c9cddb; font-size: 15px; }
+  .hero .meta div { margin-bottom: 4px; }
+  .slots { display: inline-flex; align-items: baseline; gap: 8px; background: var(--ink-2); padding: 14px 18px; border-radius: 12px; align-self: flex-start; }
+  .slots b { color: var(--gold); font-size: 28px; font-weight: 700; }
+  .slots span { color: #c9cddb; font-size: 14px; }
+  .formside { padding: 56px 48px; display: flex; align-items: center; justify-content: center; }
+  .card { width: 100%; max-width: 420px; }
+  .card h2 { font-size: 24px; margin-bottom: 6px; }
+  .card p.mute { margin: 0 0 24px; }
+  .closed { text-align: center; padding: 30px 0; }
+  @media (max-width: 820px) {
+    .wrap { grid-template-columns: 1fr; }
+    .hero { padding: 36px 24px 28px; gap: 24px; }
+    .formside { padding: 32px 24px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="hero">
+    <div>
+      <div class="meta">Pendaftaran peserta</div>
+      <h1 id="eventName">&nbsp;</h1>
+      <div class="meta"><div id="eventDate"></div><div id="eventPlace"></div></div>
+    </div>
+    <div class="slots"><b id="remaining">–</b><span>tempat tersisa</span></div>
+  </aside>
+
+  <main class="formside">
+    <div class="card">
+      <div id="formBox">
+        <h2>Daftar sekarang</h2>
+        <p class="mute">Tiket QR langsung muncul setelah kamu daftar.</p>
+        <div id="err" class="alert err hidden"></div>
+        <form id="form" novalidate>
+          <div class="field"><label for="name">Nama lengkap</label><input id="name" type="text" autocomplete="name" required></div>
+          <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="phone">Nomor HP / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx" required></div>
+          <div class="field"><label for="institution">Instansi / kampus <span class="opt">(opsional)</span></label><input id="institution" type="text"></div>
+          <button class="btn gold block" id="submit" type="submit">Daftar &amp; ambil tiket</button>
+        </form>
+      </div>
+      <div id="closedBox" class="closed hidden">
+        <h2>Pendaftaran ditutup</h2>
+        <p class="mute">Kuota peserta sudah penuh. Terima kasih atas antusiasmenya.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+fetch("/api/event").then(r => r.json()).then(e => {
+  document.title = "Daftar · " + e.name;
+  $("eventName").textContent = e.name;
+  $("eventDate").textContent = e.date;
+  $("eventPlace").textContent = e.place;
+  $("remaining").textContent = e.remaining;
+  if (e.remaining <= 0) { $("formBox").classList.add("hidden"); $("closedBox").classList.remove("hidden"); }
+});
+
+$("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("err").classList.add("hidden");
+  $("submit").disabled = true;
+  $("submit").textContent = "Memproses...";
+  try {
+    const r = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: $("name").value, email: $("email").value,
+        phone: $("phone").value, institution: $("institution").value,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Gagal mendaftar.");
+    location.href = "/tiket#" + d.code;
+  } catch (e) {
+    $("err").textContent = e.message;
+    $("err").classList.remove("hidden");
+    $("submit").disabled = false;
+    $("submit").textContent = "Daftar & ambil tiket";
+  }
+});
+</script>
+</body>
+</html>

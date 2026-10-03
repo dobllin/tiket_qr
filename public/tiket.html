@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiket kamu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  main { max-width: 700px; margin: 0 auto; padding: 40px 20px 60px; }
+  .head { text-align: center; margin-bottom: 28px; }
+  .head h1 { font-size: 26px; margin-bottom: 6px; }
+  .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+  .tips { max-width: 520px; margin: 26px auto 0; font-size: 14px; color: var(--mute); text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <h1 id="title">Memuat tiket...</h1>
+    <p class="mute" id="sub"></p>
+  </div>
+
+  <div id="ticket" class="ticket hidden">
+    <div class="main">
+      <div class="event" id="tEvent"></div>
+      <p class="k">Nama peserta</p><p class="v big" id="tName"></p>
+      <div id="tInstBox"><p class="k">Instansi / kampus</p><p class="v" id="tInst"></p></div>
+      <p class="k">Tanggal</p><p class="v" id="tDate"></p>
+      <p class="k">Lokasi</p><p class="v" id="tPlace"></p>
+    </div>
+    <div class="stub">
+      <img id="tQr" alt="QR tiket">
+      <div class="no" id="tNo"></div>
+    </div>
+  </div>
+
+  <div class="actions hidden" id="actions">
+    <button class="btn gold" id="download">Simpan tiket (gambar)</button>
+    <button class="btn ghost" id="copy">Salin link tiket</button>
+  </div>
+  <p class="tips hidden" id="tips">Tunjukkan QR ini ke petugas di pintu masuk. Simpan gambarnya atau bookmark halaman ini, dan jangan bagikan ke orang lain karena tiket hanya bisa dipakai sekali.</p>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const code = decodeURIComponent(location.hash.slice(1));
+let data;
+
+async function load() {
+  if (!code) return fail();
+  const r = await fetch("/api/ticket?code=" + encodeURIComponent(code));
+  if (!r.ok) return fail();
+  data = await r.json();
+  document.title = "Tiket · " + data.event.name;
+  $("title").textContent = "Pendaftaran berhasil";
+  $("sub").textContent = "Ini tiket masuk kamu, " + data.name.split(" ")[0] + ".";
+  $("tEvent").textContent = data.event.name;
+  $("tName").textContent = data.name;
+  if (data.institution) $("tInst").textContent = data.institution; else $("tInstBox").classList.add("hidden");
+  $("tDate").textContent = data.event.date || "-";
+  $("tPlace").textContent = data.event.place || "-";
+  $("tQr").src = data.qr;
+  $("tNo").textContent = "No. " + data.ticketNo;
+  ["ticket", "actions", "tips"].forEach(id => $(id).classList.remove("hidden"));
+}
+function fail() {
+  $("title").textContent = "Tiket tidak ditemukan";
+  $("sub").textContent = "Link tiket tidak valid. Hubungi panitia kalau kamu sudah mendaftar.";
+}
+
+// Gambar tiket ke canvas lalu unduh sebagai PNG
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function wrap(ctx, text, x, y, maxW, lh) {
+  const words = text.split(" "); let line = "";
+  for (const w of words) {
+    const t = line ? line + " " + w : w;
+    if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, x, y); line = w; y += lh; } else line = t;
+  }
+  ctx.fillText(line, x, y); return y + lh;
+}
+$("download").addEventListener("click", async () => {
+  await document.fonts.ready;
+  const W = 1000, H = 1500, c = document.createElement("canvas");
+  c.width = W; c.height = H; const ctx = c.getContext("2d");
+  const F = (w, s) => `${w} ${s}px Poppins, sans-serif`;
+  ctx.fillStyle = "#14213d"; ctx.fillRect(0, 0, W, H);
+  roundRect(ctx, 60, 60, W - 120, H - 120, 36); ctx.fillStyle = "#fff"; ctx.fill();
+  // bagian kuning bawah
+  ctx.save(); roundRect(ctx, 60, 60, W - 120, H - 120, 36); ctx.clip();
+  ctx.fillStyle = "#f5a623"; ctx.fillRect(60, 760, W - 120, H - 820); ctx.restore();
+  // sobekan
+  ctx.fillStyle = "#14213d";
+  ctx.beginPath(); ctx.arc(60, 760, 30, 0, Math.PI * 2); ctx.arc(W - 60, 760, 30, 0, Math.PI * 2); ctx.fill();
+  ctx.setLineDash([18, 14]); ctx.lineWidth = 5; ctx.strokeStyle = "#14213d";
+  ctx.beginPath(); ctx.moveTo(100, 760); ctx.lineTo(W - 100, 760); ctx.stroke(); ctx.setLineDash([]);
+
+  let y = 160; const x = 130, maxW = W - 260;
+  ctx.fillStyle = "#b8740a"; ctx.font = F(600, 30); y = wrap(ctx, data.event.name, x, y, maxW, 42) + 30;
+  const kv = (k, v, big) => {
+    ctx.fillStyle = "#6b7185"; ctx.font = F(400, 24); ctx.fillText(k, x, y); y += big ? 58 : 46;
+    ctx.fillStyle = "#14213d"; ctx.font = F(big ? 700 : 500, big ? 50 : 32); y = wrap(ctx, v, x, y, maxW, big ? 60 : 42) + 24;
+  };
+  kv("Nama peserta", data.name, true);
+  if (data.institution) kv("Instansi / kampus", data.institution);
+  kv("Tanggal", data.event.date || "-");
+  kv("Lokasi", data.event.place || "-");
+
+  const img = new Image(); img.src = data.qr; await img.decode();
+  const q = 480, qx = (W - q) / 2, qy = 815;
+  roundRect(ctx, qx - 24, qy - 24, q + 48, q + 48, 24); ctx.fillStyle = "#fff"; ctx.fill();
+  ctx.drawImage(img, qx, qy, q, q);
+  ctx.fillStyle = "#14213d"; ctx.font = F(600, 32); ctx.textAlign = "center";
+  ctx.fillText("No. " + data.ticketNo, W / 2, qy + q + 80);
+
+  const a = document.createElement("a");
+  a.download = `tiket-${data.ticketNo}.png`; a.href = c.toDataURL("image/png"); a.click();
+});
+
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Link tersalin"; }
+  catch { prompt("Salin link ini:", location.href); }
+  setTimeout(() => ($("copy").textContent = "Salin link tiket"), 2000);
+});
+
+load();
+</script>
+</body>
+</html>
