@@ -3,22 +3,23 @@
   "version": "1.0.0",
   "description": "Website pendaftaran event dengan tiket QR, scanner, dan dashboard admin",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node --no-warnings=ExperimentalWarning server.js",
+    "dev": "node --watch --no-warnings=ExperimentalWarning server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@libsql/client": "^0.15.0",
+    "@libsql/client": "^0.18.0",
     "cookie-session": "^2.1.1",
     "dotenv": "^18.0.5",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
+    "html5-qrcode": "^2.3.8",
     "qrcode": "^1.5.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "main": "server.js",
   "private": true

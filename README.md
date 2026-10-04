@@ -2,14 +2,17 @@
 
 Website pendaftaran event dengan tiket QR, scanner untuk petugas, dan dashboard admin. Dibuat untuk acara sekitar 300 peserta.
 
+Cukup buka satu alamat (halaman pendaftaran). Panitia klik **"Kamu panitia? Masuk di sini"** di bawah form, login, lalu pilih menu **Dashboard**, **Scanner**, atau **Pendaftaran**. Dari dashboard dan scanner ada tombol **← Menu** untuk kembali.
+
 | Halaman | Alamat | Untuk siapa |
 | --- | --- | --- |
 | Pendaftaran | `/` | Peserta |
 | Tiket | `/tiket#kode` | Peserta (muncul otomatis setelah daftar) |
+| Menu panitia | `/panitia` | Admin / petugas (setelah login) |
 | Dashboard | `/admin` | Admin / panitia |
 | Scanner | `/scan` | Petugas pintu masuk |
 
-Fiturnya: form pendaftaran dengan kuota otomatis, tiket QR bertanda tangan digital (QR palsu ditolak), tiket bisa diunduh sebagai gambar, scanner lewat kamera HP atau webcam laptop, tiket ditolak kalau discan dua kali, admin bisa mengubah status tiket jadi sudah/belum discan, reset semua status setelah uji coba, dan export data ke Excel.
+Fiturnya: form pendaftaran dengan kuota otomatis, tiket QR bertanda tangan digital (QR palsu ditolak), kode cadangan 5 huruf di tiket yang bisa diketik petugas kalau QR tidak terbaca, tiket bisa diunduh sebagai gambar, scanner lewat kamera HP atau webcam laptop, tiket ditolak kalau discan dua kali, admin bisa mengubah status tiket jadi sudah/belum discan, reset semua status setelah uji coba, dan export data ke Excel.
 
 ## Menjalankan di komputer sendiri
 
@@ -47,6 +50,41 @@ Buka alamat `https://....trycloudflare.com/scan` yang muncul di HP.
 2. Login di `/scan` dengan akun petugas, lalu scan tiketnya.
 3. Buka `/admin`, lalu klik **Reset semua status** (atau **Jadikan belum** per peserta). Tiket kembali bisa dipakai di hari H.
 4. Hapus peserta percobaan dari dashboard kalau tidak dipakai.
+
+## Online gratis di Vercel + Turso
+
+Web jalan di **Vercel**, data peserta disimpan di **Turso** (database SQLite online). Keduanya gratis dan bisa daftar pakai akun GitHub, tanpa kartu kredit. Kode harus sudah ada di GitHub.
+
+**1. Buat database di Turso**
+
+1. Daftar di [turso.tech](https://turso.tech) (login dengan GitHub).
+2. Buat database baru, misalnya `tiket`. Pilih lokasi terdekat (Singapore / Tokyo).
+3. Salin **URL database** (bentuknya `libsql://tiket-namakamu.turso.io`).
+4. Buat **token** untuk database itu, lalu salin.
+
+Tabel dibuat otomatis waktu web pertama kali dibuka, tidak perlu bikin manual.
+
+**2. Deploy di Vercel**
+
+1. Daftar di [vercel.com](https://vercel.com) (login dengan GitHub), klik **Add New → Project**, pilih repo `tiket_qr`.
+2. Framework Preset: **Other**. Pengaturan build lain biarkan, sudah diatur di `vercel.json`.
+3. Buka **Environment Variables**, isi:
+
+   | Nama | Isi |
+   | --- | --- |
+   | `TURSO_DATABASE_URL` | URL database dari Turso |
+   | `TURSO_AUTH_TOKEN` | token dari Turso |
+   | `SECRET` | kunci acak (lihat cara bikin di atas) |
+   | `ADMIN_ACCOUNTS` | akun panitia, misalnya `admin:passwordkuat,petugas1:pass1` |
+   | `EVENT_NAME`, `EVENT_DATE`, `EVENT_PLACE`, `QUOTA` | info acara |
+   | `TIMEZONE` | `Asia/Jakarta` |
+   | `NODE_ENV` | `production` |
+
+4. Klik **Deploy**. Setelah selesai, web bisa dibuka di alamat `https://namaproject.vercel.app` (sudah https, scanner kamera di HP langsung jalan).
+
+Kalau isi Environment Variables diubah, buka tab **Deployments** lalu **Redeploy** supaya perubahannya dipakai. Vercel memakai branch utama (`main`) untuk alamat utama, jadi pastikan perubahan sudah di-merge ke `main`.
+
+Paket gratis Vercel (Hobby) ditujukan untuk pemakaian pribadi / non-komersial. Untuk acara berbayar atau komersial, cek ketentuan Vercel dulu.
 
 ## Online di VPS (Ubuntu)
 
@@ -92,7 +130,9 @@ Setelah https aktif, pastikan `NODE_ENV=production` di `.env`, lalu `pm2 restart
 
 ## Data dan backup
 
-Semua data tersimpan di satu file `data.db` (SQLite). Untuk backup, cukup salin file itu, misalnya setiap malam:
+Kalau pakai Vercel + Turso, data ada di Turso. Backup paling gampang lewat tombol **Export Excel** di dashboard.
+
+Kalau jalan di komputer sendiri atau VPS, semua data tersimpan di satu file `data.db` (SQLite). Untuk backup, cukup salin file itu, misalnya setiap malam:
 
 ```bash
 cp /var/www/tiket/data.db ~/backup-$(date +%F).db
@@ -108,8 +148,11 @@ Kolom form ada di `public/index.html` (tampilan) dan di bagian `/api/register` p
 
 ```
 server.js          backend: pendaftaran, tiket, login, scan, dashboard, export
+api/index.js       pintu masuk untuk Vercel (memakai server.js)
+vercel.json        pengaturan Vercel
 public/index.html  halaman pendaftaran
 public/tiket.html  halaman tiket + unduh gambar
+public/panitia.html menu panitia setelah login
 public/admin.html  login & dashboard admin
 public/scan.html   scanner kamera
 public/style.css   gaya bersama
