@@ -5,19 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tiket kamu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
-  main { max-width: 700px; margin: 0 auto; padding: 40px 20px 60px; }
-  .head { text-align: center; margin-bottom: 28px; }
-  .head h1 { font-size: 26px; margin-bottom: 6px; }
-  .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
-  .tips { max-width: 520px; margin: 26px auto 0; font-size: 14px; color: var(--mute); text-align: center; }
+  body { min-height: 100vh; background: radial-gradient(circle at 50% -10%, #d6f4ef 0 380px, transparent 381px), var(--paper); }
+  main { max-width: 720px; margin: 0 auto; padding: 44px 20px 64px; }
+  .head { text-align: center; margin-bottom: 34px; }
+  .head .chip { margin-bottom: 14px; }
+  .head h1 { font-size: clamp(30px, 6vw, 44px); font-weight: 900; margin-bottom: 8px; }
+  .head h1 mark { background: linear-gradient(transparent 55%, #bff0e8 55%); padding: 0 4px; color: inherit; }
+  .head p { font-weight: 600; margin: 0; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+  .tips { max-width: 540px; margin: 28px auto 0; font-size: 14px; background: #fff; border-radius: 18px;
+    padding: 16px 18px; box-shadow: var(--shadow-sm); display: flex; gap: 12px; align-items: flex-start; }
+  .tips b { font-size: 20px; line-height: 1.2; }
+  .tips.hidden { display: none; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
+  .confetti i { position: absolute; top: -20px; width: 12px; height: 12px; border-radius: 50%; opacity: 0.85; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
 </style>
 </head>
 <body>
 <main>
   <div class="head">
+    <span class="chip hidden" id="chip">🦷 Tiket kamu sudah siap</span>
     <h1 id="title">Memuat tiket...</h1>
     <p class="mute" id="sub"></p>
   </div>
@@ -26,21 +38,22 @@
     <div class="main">
       <div class="event" id="tEvent"></div>
       <p class="k">Nama peserta</p><p class="v big" id="tName"></p>
-      <div id="tInstBox"><p class="k">Instansi / kampus</p><p class="v" id="tInst"></p></div>
+      <div id="tInstBox"><p class="k">Kampus / instansi</p><p class="v" id="tInst"></p></div>
       <p class="k">Tanggal</p><p class="v" id="tDate"></p>
       <p class="k">Lokasi</p><p class="v" id="tPlace"></p>
     </div>
     <div class="stub">
       <img id="tQr" alt="QR tiket">
+      <div class="codelbl">Kode cadangan</div>
       <div class="no" id="tNo"></div>
     </div>
   </div>
 
   <div class="actions hidden" id="actions">
-    <button class="btn gold" id="download">Simpan tiket (gambar)</button>
-    <button class="btn ghost" id="copy">Salin link tiket</button>
+    <button class="btn gold" id="download">⬇️ Simpan tiket (gambar)</button>
+    <button class="btn ghost" id="copy">🔗 Salin link tiket</button>
   </div>
-  <p class="tips hidden" id="tips">Tunjukkan QR ini ke petugas di pintu masuk. Simpan gambarnya atau bookmark halaman ini, dan jangan bagikan ke orang lain karena tiket hanya bisa dipakai sekali.</p>
+  <div class="tips hidden" id="tips"><b>💡</b><div>Tunjukkan QR ini ke panitia di pintu masuk. Kalau QR-nya nggak kebaca, sebutkan <b style="font-size:inherit">kode cadangan</b> 5 huruf di bawah QR. Simpan gambarnya atau screenshot halaman ini. <b style="font-size:inherit">Jangan dibagikan ke siapa pun</b>, karena tiket cuma bisa dipakai sekali.</div></div>
 </main>
 
 <script>
@@ -54,20 +67,38 @@ async function load() {
   if (!r.ok) return fail();
   data = await r.json();
   document.title = "Tiket · " + data.event.name;
-  $("title").textContent = "Pendaftaran berhasil";
-  $("sub").textContent = "Ini tiket masuk kamu, " + data.name.split(" ")[0] + ".";
+  $("title").innerHTML = "Pendaftaran <mark>berhasil!</mark> 😁";
+  $("sub").textContent = "Ini tiket masuk kamu, " + data.name.split(" ")[0] + ". Sampai ketemu di acara!";
+  $("chip").classList.remove("hidden");
   $("tEvent").textContent = data.event.name;
   $("tName").textContent = data.name;
   if (data.institution) $("tInst").textContent = data.institution; else $("tInstBox").classList.add("hidden");
   $("tDate").textContent = data.event.date || "-";
   $("tPlace").textContent = data.event.place || "-";
   $("tQr").src = data.qr;
-  $("tNo").textContent = "No. " + data.ticketNo;
+  $("tNo").textContent = data.ticketNo;
   ["ticket", "actions", "tips"].forEach(id => $(id).classList.remove("hidden"));
+  confetti();
+}
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = document.createElement("div"); box.className = "confetti";
+  const colors = ["#14b8a6", "#2b8fd6", "#7fe3d6", "#bfe3f7", "#ff9eb5"];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.background = colors[i % colors.length];
+    p.style.animationDuration = 2.2 + Math.random() * 2 + "s";
+    p.style.animationDelay = Math.random() * 0.6 + "s";
+    if (i % 3 === 0) p.style.borderRadius = "50%";
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 5200);
 }
 function fail() {
-  $("title").textContent = "Tiket tidak ditemukan";
-  $("sub").textContent = "Link tiket tidak valid. Hubungi panitia kalau kamu sudah mendaftar.";
+  $("title").textContent = "Waduh, tiket nggak ketemu 🤔";
+  $("sub").textContent = "Link tiketnya nggak valid. Hubungi panitia kalau kamu sudah daftar.";
 }
 
 // Gambar tiket ke canvas lalu unduh sebagai PNG
@@ -83,39 +114,64 @@ function wrap(ctx, text, x, y, maxW, lh) {
   }
   ctx.fillText(line, x, y); return y + lh;
 }
+const TOOTH = "M20 6c-7 0-13 6-13 15 0 7 3 11 4 17 1 7 2 20 8 20 5 0 5-14 13-14s8 14 13 14c6 0 7-13 8-20 1-6 4-10 4-17 0-9-6-15-13-15-5 0-8 3-12 3S25 6 20 6z";
 $("download").addEventListener("click", async () => {
   await document.fonts.ready;
   const W = 1000, H = 1500, c = document.createElement("canvas");
   c.width = W; c.height = H; const ctx = c.getContext("2d");
-  const F = (w, s) => `${w} ${s}px Poppins, sans-serif`;
-  ctx.fillStyle = "#14213d"; ctx.fillRect(0, 0, W, H);
-  roundRect(ctx, 60, 60, W - 120, H - 120, 36); ctx.fillStyle = "#fff"; ctx.fill();
-  // bagian kuning bawah
-  ctx.save(); roundRect(ctx, 60, 60, W - 120, H - 120, 36); ctx.clip();
-  ctx.fillStyle = "#f5a623"; ctx.fillRect(60, 760, W - 120, H - 820); ctx.restore();
-  // sobekan
-  ctx.fillStyle = "#14213d";
-  ctx.beginPath(); ctx.arc(60, 760, 30, 0, Math.PI * 2); ctx.arc(W - 60, 760, 30, 0, Math.PI * 2); ctx.fill();
-  ctx.setLineDash([18, 14]); ctx.lineWidth = 5; ctx.strokeStyle = "#14213d";
-  ctx.beginPath(); ctx.moveTo(100, 760); ctx.lineTo(W - 100, 760); ctx.stroke(); ctx.setLineDash([]);
+  const F = (w, s, head) => `${w} ${s}px ${head ? '"Nunito"' : '"Plus Jakarta Sans"'}, sans-serif`;
+  const INK = "#0d3b4f", CUT = 820, L = 70, R = W - 70, T = 70, B = H - 90;
 
-  let y = 160; const x = 130, maxW = W - 260;
-  ctx.fillStyle = "#b8740a"; ctx.font = F(600, 30); y = wrap(ctx, data.event.name, x, y, maxW, 42) + 30;
+  // latar gradasi tosca-biru dengan gelembung
+  const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#19c3b1"); g.addColorStop(0.5, "#12a6a6"); g.addColorStop(1, "#2b8fd6");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(255,255,255,0.14)";
+  [[900, 90, 120], [60, 1420, 140], [960, 1300, 60], [40, 330, 40]].forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); });
+
+  // badan tiket + bayangan lembut
+  ctx.save(); ctx.shadowColor = "rgba(13,59,79,0.35)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+  roundRect(ctx, L, T, R - L, B - T, 44); ctx.fillStyle = "#fff"; ctx.fill(); ctx.restore();
+  ctx.save(); roundRect(ctx, L, T, R - L, B - T, 44); ctx.clip();
+  const g2 = ctx.createLinearGradient(0, CUT, 0, B); g2.addColorStop(0, "#e3f8f4"); g2.addColorStop(1, "#d8eefa");
+  ctx.fillStyle = g2; ctx.fillRect(L, CUT, R - L, B - CUT);
+  ctx.fillStyle = "#e0f7f3"; ctx.beginPath(); ctx.arc(R - 20, T + 20, 150, 0, Math.PI * 2); ctx.fill();
+  ctx.translate(R - 190, T + 40); ctx.scale(2.2, 2.2); ctx.fillStyle = "#bfeee6"; ctx.fill(new Path2D(TOOTH)); ctx.restore();
+
+  // sobekan
+  ctx.fillStyle = g;
+  [L, R].forEach(cx => { ctx.beginPath(); ctx.arc(cx, CUT, 32, 0, Math.PI * 2); ctx.fill(); });
+  ctx.setLineDash([20, 14]); ctx.lineWidth = 4; ctx.strokeStyle = "#9fd4cf";
+  ctx.beginPath(); ctx.moveTo(L + 50, CUT); ctx.lineTo(R - 50, CUT); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = INK;
+
+  let y = T + 80; const x = L + 60, maxW = R - L - 120;
+  // label nama acara
+  ctx.font = F(800, 28);
+  const ev = data.event.name, evW = Math.min(ctx.measureText(ev).width, maxW - 40);
+  roundRect(ctx, x, y - 6, evW + 44, 58, 29); ctx.fillStyle = "#14b8a6"; ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.fillText(ev, x + 22, y + 33, maxW - 40);
+  y += 115;
+
   const kv = (k, v, big) => {
-    ctx.fillStyle = "#6b7185"; ctx.font = F(400, 24); ctx.fillText(k, x, y); y += big ? 58 : 46;
-    ctx.fillStyle = "#14213d"; ctx.font = F(big ? 700 : 500, big ? 50 : 32); y = wrap(ctx, v, x, y, maxW, big ? 60 : 42) + 24;
+    ctx.fillStyle = "#5f7a85"; ctx.font = F(800, 22); ctx.fillText(k.toUpperCase(), x, y); y += big ? 66 : 48;
+    ctx.fillStyle = INK; ctx.font = big ? F(800, 60, true) : F(700, 32); y = wrap(ctx, v, x, y, maxW, big ? 66 : 42) + 22;
   };
   kv("Nama peserta", data.name, true);
-  if (data.institution) kv("Instansi / kampus", data.institution);
+  if (data.institution) kv("Kampus / instansi", data.institution);
   kv("Tanggal", data.event.date || "-");
   kv("Lokasi", data.event.place || "-");
 
   const img = new Image(); img.src = data.qr; await img.decode();
-  const q = 480, qx = (W - q) / 2, qy = 815;
-  roundRect(ctx, qx - 24, qy - 24, q + 48, q + 48, 24); ctx.fillStyle = "#fff"; ctx.fill();
+  const q = 360, qx = (W - q) / 2, qy = CUT + 62;
+  ctx.save(); ctx.shadowColor = "rgba(13,59,79,0.18)"; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  roundRect(ctx, qx - 22, qy - 22, q + 44, q + 44, 30); ctx.fillStyle = "#fff"; ctx.fill(); ctx.restore();
   ctx.drawImage(img, qx, qy, q, q);
-  ctx.fillStyle = "#14213d"; ctx.font = F(600, 32); ctx.textAlign = "center";
-  ctx.fillText("No. " + data.ticketNo, W / 2, qy + q + 80);
+  ctx.textAlign = "center"; ctx.fillStyle = "#0d8f86"; ctx.font = F(800, 22);
+  ctx.fillText("KODE CADANGAN (KALAU QR GAGAL)", W / 2, qy + q + 62);
+  ctx.font = F(800, 46); ctx.letterSpacing = "10px";
+  const no = data.ticketNo, nw = ctx.measureText(no).width + 70, ny = qy + q + 80;
+  roundRect(ctx, (W - nw) / 2, ny, nw, 74, 37); ctx.fillStyle = "#fff"; ctx.fill();
+  ctx.fillStyle = INK; ctx.fillText(no, W / 2 + 5, ny + 54); ctx.letterSpacing = "0px";
 
   const a = document.createElement("a");
   a.download = `tiket-${data.ticketNo}.png`; a.href = c.toDataURL("image/png"); a.click();

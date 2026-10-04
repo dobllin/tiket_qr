@@ -2,14 +2,17 @@
 
 Website pendaftaran event dengan tiket QR, scanner untuk petugas, dan dashboard admin. Dibuat untuk acara sekitar 300 peserta.
 
+Cukup buka satu alamat (halaman pendaftaran). Panitia klik **"Kamu panitia? Masuk di sini"** di bawah form, login, lalu pilih menu **Dashboard**, **Scanner**, atau **Pendaftaran**. Dari dashboard dan scanner ada tombol **← Menu** untuk kembali.
+
 | Halaman | Alamat | Untuk siapa |
 | --- | --- | --- |
 | Pendaftaran | `/` | Peserta |
 | Tiket | `/tiket#kode` | Peserta (muncul otomatis setelah daftar) |
+| Menu panitia | `/panitia` | Admin / petugas (setelah login) |
 | Dashboard | `/admin` | Admin / panitia |
 | Scanner | `/scan` | Petugas pintu masuk |
 
-Fiturnya: form pendaftaran dengan kuota otomatis, tiket QR bertanda tangan digital (QR palsu ditolak), tiket bisa diunduh sebagai gambar, scanner lewat kamera HP atau webcam laptop, tiket ditolak kalau discan dua kali, admin bisa mengubah status tiket jadi sudah/belum discan, reset semua status setelah uji coba, dan export data ke Excel.
+Fiturnya: form pendaftaran dengan kuota otomatis, tiket QR bertanda tangan digital (QR palsu ditolak), kode cadangan 5 huruf di tiket yang bisa diketik petugas kalau QR tidak terbaca, tiket bisa diunduh sebagai gambar, scanner lewat kamera HP atau webcam laptop, tiket ditolak kalau discan dua kali, admin bisa mengubah status tiket jadi sudah/belum discan, reset semua status setelah uji coba, dan export data ke Excel.
 
 ## Menjalankan di komputer sendiri
 
@@ -110,6 +113,7 @@ Kolom form ada di `public/index.html` (tampilan) dan di bagian `/api/register` p
 server.js          backend: pendaftaran, tiket, login, scan, dashboard, export
 public/index.html  halaman pendaftaran
 public/tiket.html  halaman tiket + unduh gambar
+public/panitia.html menu panitia setelah login
 public/admin.html  login & dashboard admin
 public/scan.html   scanner kamera
 public/style.css   gaya bersama

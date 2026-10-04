@@ -52,13 +52,36 @@ db.exec(`
   );
 `);
 
+// ---------- Kode cadangan 5 karakter (kalau QR tidak bisa discan) ----------
+// Tanpa huruf/angka yang mirip (O/0, I/1/L) supaya gampang dibaca & diketik petugas
+const SHORT_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const SHORT_LEN = 5;
+const makeShort = () => Array.from({ length: SHORT_LEN }, () => SHORT_CHARS[crypto.randomInt(SHORT_CHARS.length)]).join("");
+
+// Database lama belum punya kolom kode cadangan -> tambahkan & isi otomatis
+if (!db.prepare("PRAGMA table_info(participants)").all().some((c) => c.name === "short_code")) {
+  db.exec("ALTER TABLE participants ADD COLUMN short_code TEXT");
+}
+db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_short_code ON participants(short_code)");
+{
+  const missing = db.prepare("SELECT id FROM participants WHERE short_code IS NULL").all();
+  const taken = db.prepare("SELECT 1 FROM participants WHERE short_code = ?");
+  const set = db.prepare("UPDATE participants SET short_code = ? WHERE id = ?");
+  for (const { id } of missing) {
+    let s;
+    do s = makeShort(); while (taken.get(s));
+    set.run(s, id);
+  }
+}
+
 const q = {
   count: db.prepare("SELECT COUNT(*) AS n FROM participants"),
   countScanned: db.prepare("SELECT COUNT(*) AS n FROM participants WHERE scanned_at IS NOT NULL"),
   insert: db.prepare(
-    "INSERT INTO participants (id, name, email, phone, institution, created_at) VALUES (@id, @name, @email, @phone, @institution, @created_at)"
+    "INSERT INTO participants (id, short_code, name, email, phone, institution, created_at) VALUES (@id, @short_code, @name, @email, @phone, @institution, @created_at)"
   ),
   byId: db.prepare("SELECT * FROM participants WHERE id = ?"),
+  byShort: db.prepare("SELECT id FROM participants WHERE short_code = ?"),
   byEmail: db.prepare("SELECT id FROM participants WHERE email = ?"),
   all: db.prepare("SELECT * FROM participants ORDER BY created_at DESC, rowid DESC"),
   // Hanya berhasil kalau tiket belum pernah discan -> aman dari scan dobel bersamaan
@@ -86,6 +109,7 @@ function registerTx(p) {
   try {
     if (q.count.get().n >= QUOTA) { db.exec("ROLLBACK"); return { error: "Kuota pendaftaran sudah penuh.", status: 409 }; }
     if (q.byEmail.get(p.email)) { db.exec("ROLLBACK"); return { error: "Email ini sudah terdaftar. Hubungi panitia kalau tiketmu hilang.", status: 409 }; }
+    do p.short_code = makeShort(); while (q.byShort.get(p.short_code));
     q.insert.run(p);
     db.exec("COMMIT");
     return { ok: true };
@@ -163,7 +187,7 @@ app.get("/api/ticket", async (req, res) => {
   res.json({
     name: p.name,
     institution: p.institution,
-    ticketNo: p.id.slice(0, 6).toUpperCase(),
+    ticketNo: p.short_code,
     event: { name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE },
     qr,
   });
@@ -200,8 +224,19 @@ app.post("/api/logout", (req, res) => {
 app.get("/api/me", (req, res) => res.json({ user: (req.session && req.session.user) || null }));
 
 // ---------- Scan ----------
+// Kode cadangan yang diketik petugas, misalnya "K7PXM" (huruf kecil, spasi & strip diabaikan).
+// Hanya diterima di scanner (wajib login), bukan di halaman tiket publik.
+function parseShort(code) {
+  const s = String(code || "").toUpperCase().replace(/[\s-]/g, "");
+  if (s.length !== SHORT_LEN || ![...s].every((c) => SHORT_CHARS.includes(c))) return undefined;
+  const row = q.byShort.get(s);
+  return row ? row.id : null;
+}
+
 app.post("/api/scan", auth, (req, res) => {
-  const id = parseCode(req.body.code);
+  const short = parseShort(req.body.code);
+  if (short === null) return res.json({ status: "invalid", message: "Kode tiket tidak terdaftar." });
+  const id = short || parseCode(req.body.code);
   if (!id) return res.json({ status: "invalid", message: "QR tidak dikenali / palsu." });
   const p = q.byId.get(id);
   if (!p) return res.json({ status: "invalid", message: "Tiket tidak terdaftar." });
@@ -228,6 +263,7 @@ app.get("/api/participants", auth, (req, res) => {
   const rows = q.all.all().map((p) => ({
     id: p.id,
     code: makeCode(p.id),
+    short: p.short_code,
     name: p.name,
     email: p.email,
     phone: p.phone,
@@ -261,7 +297,7 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
   const ws = wb.addWorksheet("Peserta");
   ws.columns = [
     { header: "No", key: "no", width: 6 },
-    { header: "No. Tiket", key: "ticket", width: 12 },
+    { header: "Kode Tiket", key: "ticket", width: 12 },
     { header: "Nama", key: "name", width: 28 },
     { header: "Email", key: "email", width: 30 },
     { header: "No. HP", key: "phone", width: 16 },
@@ -274,7 +310,7 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
   q.all.all().reverse().forEach((p, i) =>
     ws.addRow({
       no: i + 1,
-      ticket: p.id.slice(0, 6).toUpperCase(),
+      ticket: p.short_code,
       name: p.name,
       email: p.email,
       phone: p.phone,
@@ -297,8 +333,6 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server jalan di http://localhost:${PORT}`);
-  console.log(`  Pendaftaran : http://localhost:${PORT}/`);
-  console.log(`  Admin       : http://localhost:${PORT}/admin`);
-  console.log(`  Scanner     : http://localhost:${PORT}/scan`);
+  console.log(`Server jalan, buka http://localhost:${PORT}`);
+  console.log(`Panitia: klik "Kamu panitia? Masuk di sini" di bawah form untuk ke dashboard & scanner.`);
 });

@@ -3,26 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14213d">
+<meta name="theme-color" content="#0d3b4f">
 <title>Scanner tiket</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
   body { background: var(--ink); color: #fff; min-height: 100vh; }
   header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; padding-top: max(14px, env(safe-area-inset-top)); }
-  header h1 { color: #fff; font-size: 17px; flex: 1; }
-  header a { color: #c9cddb; font-size: 14px; text-decoration: none; }
-  .count { background: var(--ink-2); padding: 6px 12px; border-radius: 99px; font-size: 13px; color: #c9cddb; }
-  .count b { color: var(--gold); }
+  header h1 { color: #fff; font-size: 20px; font-weight: 900; flex: 1; }
+  header h1 span { color: #7fe3d6; }
+  header a { color: #cfe6ec; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .count { background: var(--ink-2); padding: 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; color: #cfe6ec; }
+  .count b { color: #7fe3d6; }
   main { max-width: 560px; margin: 0 auto; padding: 0 16px 32px; }
-  #reader { width: 100%; border-radius: 16px; overflow: hidden; background: #0d1629; aspect-ratio: 1 / 1; }
+  #reader { width: 100%; border-radius: 24px; overflow: hidden; background: #0a2f3f; aspect-ratio: 1 / 1; border: 3px solid var(--primary); }
   #reader video { object-fit: cover; }
   .row { display: flex; gap: 10px; margin-top: 14px; }
-  .row select, .row input { background: var(--ink-2); border-color: #33405f; color: #fff; }
-  .row input::placeholder { color: #8a93ad; }
-  .hint { color: #a8afc4; font-size: 13.5px; text-align: center; margin: 12px 0 0; }
-  .camErr { background: #2a1d2a; border: 1px solid #5a2a3a; color: #f3c6c6; padding: 16px; border-radius: 12px; font-size: 14px; margin-top: 14px; }
+  .row select, .row input { background: var(--ink-2); border-color: #23677f; color: #fff; }
+  .row input::placeholder { color: #8fb3bf; text-transform: none; letter-spacing: 0; }
+  #code { text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  #code::placeholder { font-weight: 500; }
+  .hint { color: #a9c7d1; font-size: 13.5px; text-align: center; margin: 12px 0 0; }
+  .camErr { background: #3a2230; border: 1px solid #6a3045; color: #f3c6c6; padding: 16px; border-radius: 16px; font-size: 14px; margin-top: 14px; }
 
   /* hasil scan */
   .result { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
@@ -30,9 +34,9 @@
   .result.ok { background: var(--ok); }
   .result.used { background: var(--warn); }
   .result.invalid { background: var(--bad); }
-  .result .icon { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
+  .result .icon { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
   .result .icon svg { width: 60px; height: 60px; }
-  .result h2 { color: #fff; font-size: 30px; font-weight: 700; margin-bottom: 8px; }
+  .result h2 { color: #fff; font-size: 38px; font-weight: 800; margin-bottom: 8px; }
   .result .name { font-size: 22px; font-weight: 600; }
   .result .info { font-size: 15px; opacity: 0.92; margin-top: 6px; }
   .result .tap { position: absolute; bottom: max(28px, env(safe-area-inset-bottom)); font-size: 13px; opacity: 0.8; }
@@ -40,9 +44,9 @@
 </head>
 <body>
 <header>
-  <h1>Scanner tiket</h1>
+  <h1>Scanner <span>tiket</span></h1>
   <span class="count">Discan: <b id="n">0</b></span>
-  <a href="/admin">Dashboard</a>
+  <a href="/panitia">← Menu</a>
 </header>
 
 <main>
@@ -50,10 +54,10 @@
   <div id="camErr" class="camErr hidden"></div>
   <div class="row"><select id="cams" aria-label="Pilih kamera"></select></div>
   <form class="row" id="manual">
-    <input id="code" type="text" placeholder="Atau tempel kode tiket di sini" autocomplete="off">
+    <input id="code" type="text" placeholder="Ketik kode cadangan" autocomplete="off" autocapitalize="characters" spellcheck="false">
     <button class="btn gold" type="submit">Cek</button>
   </form>
-  <p class="hint">Arahkan kamera ke QR tiket. Hasil muncul otomatis.</p>
+  <p class="hint">Arahkan kamera ke QR tiket, hasil muncul otomatis. Kalau QR nggak kebaca, ketik kode cadangan yang ada di bawah QR peserta.</p>
 </main>
 
 <div id="result" class="result hidden" role="alert">
