@@ -1,3 +1,6 @@
 {
-  "cleanUrls": true
+  "buildCommand": "mkdir -p public/vendor && cp node_modules/html5-qrcode/html5-qrcode.min.js public/vendor/",
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
 }

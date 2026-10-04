@@ -54,6 +54,16 @@
   .pill.yes { background: var(--mint); color: var(--primary-d); }
   .pill.no { background: #eef3f5; color: var(--mute); }
   .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+  .btn.small.proofb { border-color: #a9d9d3; color: var(--primary-d); background: var(--mint); }
+  .modal { position: fixed; inset: 0; z-index: 60; background: rgba(13, 59, 79, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .sheet { background: #fff; border-radius: 24px; width: 100%; max-width: 520px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
+  .sheet-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .sheet-head b { color: var(--ink); font-size: 16px; }
+  .pv-img { flex: 1; overflow: auto; background: #eef5f7; display: flex; align-items: flex-start; justify-content: center; min-height: 200px; position: relative; }
+  .pv-img img { max-width: 100%; display: block; }
+  .pv-img .sm { position: absolute; top: 50%; left: 0; right: 0; text-align: center; }
+  .sheet-acts { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .sheet-acts .btn { flex: 1; }
   .empty { padding: 40px; text-align: center; color: var(--mute); }
   .danger { color: var(--bad) !important; }
 
@@ -123,6 +133,19 @@
   </div>
 </section>
 
+<div id="proofView" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pvName">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div><b id="pvName"></b><div class="sm" id="pvInfo"></div></div>
+      <button class="btn ghost small" id="pvClose" aria-label="Tutup">✕</button>
+    </div>
+    <div class="pv-img"><img id="pvImg" alt="Bukti transfer"><div id="pvLoading" class="sm">Memuat gambar...</div></div>
+    <div class="sheet-acts">
+      <a class="btn ghost" id="pvOpen" target="_blank" rel="noopener">Buka ukuran penuh</a>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -175,6 +198,7 @@ function render() {
         ? `<span class="pill yes">Sudah masuk</span><div class="sm">${esc(p.scannedAt)} · ${esc(p.scannedBy || "")}</div>`
         : `<span class="pill no">Belum discan</span>`}</td>
       <td><div class="acts">
+        ${p.hasProof ? `<button class="btn ghost small proofb" data-act="proof" data-id="${p.id}">Lihat bukti</button>` : ""}
         ${p.scannedAt
           ? `<button class="btn ghost small" data-act="reset" data-id="${p.id}">Jadikan belum</button>`
           : `<button class="btn ghost small" data-act="in" data-id="${p.id}">Tandai masuk</button>`}
@@ -184,9 +208,28 @@ function render() {
     </tr>`).join("");
 }
 
+// ---------- Lihat bukti transfer ----------
+let pvId = null;
+function openProof(id) {
+  const p = all.find(x => x.id === id); if (!p) return;
+  pvId = id;
+  $("pvName").textContent = p.name;
+  $("pvInfo").textContent = `Kode ${p.short} · ${p.phone}`;
+  $("pvImg").removeAttribute("src"); $("pvLoading").textContent = "Memuat gambar..."; $("pvLoading").classList.remove("hidden");
+  $("pvImg").onload = () => $("pvLoading").classList.add("hidden");
+  $("pvImg").onerror = () => ($("pvLoading").textContent = "Gambar tidak bisa dimuat.");
+  $("pvImg").src = $("pvOpen").href = "/api/proof/" + encodeURIComponent(id);
+  $("proofView").classList.remove("hidden");
+}
+function closeProof() { $("proofView").classList.add("hidden"); pvId = null; }
+$("pvClose").addEventListener("click", closeProof);
+$("proofView").addEventListener("click", (e) => { if (e.target === $("proofView")) closeProof(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pvId) closeProof(); });
+
 $("rows").addEventListener("click", async (e) => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const id = b.dataset.id;
+  if (b.dataset.act === "proof") return openProof(id);
   b.disabled = true;
   if (b.dataset.act === "del") {
     if (!confirm(`Hapus ${b.dataset.name}? Tiketnya tidak bisa dipakai lagi.`)) { b.disabled = false; return; }

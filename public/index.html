@@ -69,6 +69,19 @@
     font-size: 13.5px; color: var(--mute); text-decoration: none; }
   .staff b { color: var(--primary-d); }
   .staff:hover b { text-decoration: underline; }
+  .payinfo { background: var(--mint); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; }
+  .payinfo b { display: block; color: var(--primary-d); margin-bottom: 4px; }
+  .payinfo div { white-space: pre-line; color: var(--ink); font-weight: 600; }
+  .drop { position: relative; display: block; cursor: pointer; border: 2px dashed #a9d9d3; border-radius: 16px; background: #fbfefe; padding: 18px 16px; text-align: center; transition: border-color 0.15s, background 0.15s; margin: 0; font-weight: 500; }
+  .drop:hover, .drop:focus-within { border-color: var(--primary); background: var(--mint); }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .drop-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--mute); }
+  .drop-empty svg { width: 30px; height: 30px; color: var(--primary); margin-bottom: 2px; }
+  .drop-empty b { color: var(--ink); font-size: 14px; }
+  .drop-empty small, .drop-done small { font-size: 12.5px; color: var(--mute); display: block; }
+  .drop-done { display: flex; align-items: center; gap: 14px; text-align: left; }
+  .drop-done img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; flex: none; box-shadow: var(--shadow-sm); }
+  .drop-done b { display: block; color: var(--ink); font-size: 14px; word-break: break-all; }
   .closed { text-align: center; padding: 20px 0; }
   .closed .emoji { font-size: 52px; }
 
@@ -124,6 +137,24 @@
           <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="kamu@email.com" required></div>
           <div class="field"><label for="phone">Nomor HP / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx" required></div>
           <div class="field"><label for="institution">Kampus / instansi <span class="opt">(opsional)</span></label><input id="institution" type="text" placeholder="Contoh: Universitas Indonesia"></div>
+          <div id="payBox" class="hidden">
+            <div class="payinfo"><b>💳 Pembayaran</b><div id="payInfo"></div></div>
+            <div class="field">
+              <label for="proof">Bukti transfer</label>
+              <label class="drop" id="drop" for="proof">
+                <input id="proof" type="file" accept="image/*">
+                <span class="drop-empty" id="dropEmpty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                  <b>Pilih foto / screenshot bukti transfer</b>
+                  <small>JPG atau PNG. Pastikan nominal & tanggal terlihat jelas.</small>
+                </span>
+                <span class="drop-done hidden" id="dropDone">
+                  <img id="proofPreview" alt="Pratinjau bukti transfer">
+                  <span><b id="proofName"></b><small>Ketuk untuk ganti gambar</small></span>
+                </span>
+              </label>
+            </div>
+          </div>
           <button class="btn gold block" id="submit" type="submit">Daftar &amp; ambil tiket →</button>
         </form>
         <p class="fine">Satu email hanya bisa dipakai untuk satu tiket.</p>
@@ -168,11 +199,55 @@ fetch("/api/event").then(r => r.json()).then(e => {
   $("marquee").innerHTML = html + html + html + html;
 
   if (e.remaining <= 0) { $("formBox").classList.add("hidden"); $("closedBox").classList.remove("hidden"); }
+  if (e.payment && e.payment.required) {
+    payRequired = true;
+    $("payInfo").textContent = e.payment.info;
+    $("payBox").classList.remove("hidden");
+  }
+});
+
+// ---------- Bukti transfer ----------
+// Foto dari kamera HP bisa 5-10 MB, jadi dikecilkan dulu di browser (maks 1600px, JPEG) sebelum dikirim
+let payRequired = false, proofData = null;
+async function shrink(file) {
+  const img = await new Promise((ok, no) => {
+    const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("File ini bukan gambar yang bisa dibuka. Coba pilih JPG / PNG."));
+    i.src = URL.createObjectURL(file);
+  });
+  const max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(img.src);
+  let q = 0.82, url = c.toDataURL("image/jpeg", q);
+  while (url.length > 1.9e6 && q > 0.4) url = c.toDataURL("image/jpeg", (q -= 0.12)); // jaga di bawah ~1,4 MB
+  return url;
+}
+$("proof").addEventListener("change", async () => {
+  const f = $("proof").files[0];
+  $("err").classList.add("hidden");
+  if (!f) return;
+  try {
+    proofData = await shrink(f);
+    $("proofPreview").src = proofData;
+    $("proofName").textContent = f.name;
+    $("dropEmpty").classList.add("hidden"); $("dropDone").classList.remove("hidden");
+  } catch (e) {
+    proofData = null; $("proof").value = "";
+    $("err").textContent = e.message; $("err").classList.remove("hidden");
+  }
 });
 
 $("form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   $("err").classList.add("hidden");
+  if (payRequired && !proofData) {
+    $("err").textContent = "Upload bukti transfer dulu ya.";
+    $("err").classList.remove("hidden");
+    $("drop").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   $("submit").disabled = true;
   $("submit").textContent = "Lagi diproses...";
   try {
@@ -182,9 +257,10 @@ $("form").addEventListener("submit", async (ev) => {
       body: JSON.stringify({
         name: $("name").value, email: $("email").value,
         phone: $("phone").value, institution: $("institution").value,
+        proof: proofData,
       }),
     });
-    const d = await r.json();
+    const d = await r.json().catch(() => ({ error: r.status === 413 ? "Gambar bukti terlalu besar, coba screenshot ulang." : "Gagal terhubung ke server, coba lagi." }));
     if (!r.ok) throw new Error(d.error || "Gagal mendaftar.");
     location.href = "/tiket#" + d.code;
   } catch (e) {

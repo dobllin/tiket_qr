@@ -34,6 +34,16 @@ Buka `http://localhost:3000`. Isi `.env` yang wajib diganti:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+## Bukti transfer (acara berbayar)
+
+Isi `PAYMENT_INFO` di `.env` (atau di Environment Variables Vercel) dengan nomor rekening dan nominal. Begitu diisi:
+
+1. Form pendaftaran menampilkan info pembayaran dan **wajib upload gambar bukti transfer**. Foto dari HP otomatis dikecilkan (biasanya jadi 100-300 KB) sebelum dikirim.
+2. Tiket langsung muncul seperti biasa.
+3. Panitia bisa melihat gambarnya di dashboard lewat tombol **Lihat bukti**. Kalau buktinya tidak sesuai, peserta bisa dihapus dari dashboard.
+
+Kosongkan `PAYMENT_INFO` kalau acaranya gratis; form kembali tanpa upload.
+
 ## Mencoba scanner di HP
 
 Browser hanya mengizinkan kamera lewat `https://` (kecuali `localhost`). Untuk mencoba dari HP sebelum online, buat tunnel https sementara, misalnya dengan Cloudflare:
