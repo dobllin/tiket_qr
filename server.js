@@ -33,10 +33,12 @@ const ACCOUNTS = Object.fromEntries(
 );
 
 const runDirect = require.main === module; // dijalankan pakai "npm start", bukan di Vercel
+// Di Vercel jangan crash: simpan pesannya, lalu tampilkan lewat /api supaya jelas apa yang kurang
+let CONFIG_ERROR = null;
 function fail(msg) {
   console.error(msg);
   if (runDirect) process.exit(1);
-  throw new Error(msg);
+  CONFIG_ERROR ||= msg;
 }
 if (!SECRET || SECRET.length < 24) fail("SECRET di .env wajib diisi, minimal 24 karakter.");
 if (!Object.keys(ACCOUNTS).length) fail("ADMIN_ACCOUNTS di .env wajib diisi, contoh: admin:passwordku");
@@ -181,7 +183,7 @@ app.use((req, res, next) => (req.path === "/api/register" ? bigJson : smallJson)
 app.use(
   cookieSession({
     name: "sesi",
-    keys: [SECRET],
+    keys: [SECRET || "belum-diisi"],
     maxAge: 12 * 60 * 60 * 1000,
     httpOnly: true,
     sameSite: "lax",
@@ -189,9 +191,17 @@ app.use(
   })
 );
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
-app.use("/vendor", express.static(path.join(__dirname, "node_modules/html5-qrcode")));
 
-app.use("/api", async (req, res, next) => { await dbReady(); next(); });
+app.use("/api", async (req, res, next) => {
+  if (CONFIG_ERROR) return res.status(500).json({ error: CONFIG_ERROR + " (cek Environment Variables di Vercel, lalu Redeploy)" });
+  try {
+    await dbReady();
+    next();
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Gagal konek ke database Turso: " + e.message });
+  }
+});
 
 const auth = (req, res, next) =>
   req.session && req.session.user ? next() : res.status(401).json({ error: "Silakan login dulu." });
