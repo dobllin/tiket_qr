@@ -5,68 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
   /* Login */
-  .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.16) 0 140px, transparent 141px), linear-gradient(150deg, #19c3b1 0%, #12a6a6 45%, #2b8fd6 100%); }
-  .login .box { background: #fff; box-shadow: var(--shadow); border-radius: 26px; padding: 32px 28px; width: 100%; max-width: 380px; }
-  .login h1 { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+  .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--ink); }
+  .login .box { background: #fff; border-radius: var(--radius); padding: 32px 28px; width: 100%; max-width: 380px; }
+  .login h1 { font-size: 22px; margin-bottom: 4px; }
   .login p { margin: 0 0 22px; }
-  .login .back { display: block; text-align: center; margin-top: 18px; font-size: 13.5px; font-weight: 700; color: var(--mute); text-decoration: none; }
-  .login .back:hover { color: var(--ink); text-decoration: underline; }
 
   /* Dashboard */
-  header.top { background: linear-gradient(120deg, #12a6a6, #2b8fd6); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  header.top h1 { color: #fff; font-size: 20px; font-weight: 900; flex: 1; min-width: 180px; }
-  header.top .who { color: #e6fbf8; font-size: 13px; }
-  header.top .btn.ghost { color: var(--ink); border-color: transparent; }
-  header.top .btn.small { box-shadow: none; }
+  header.top { background: var(--ink); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header.top h1 { color: #fff; font-size: 18px; flex: 1; min-width: 180px; }
+  header.top .who { color: #c9cddb; font-size: 13px; }
+  header.top .btn.ghost { color: #fff; border-color: #3a4766; }
   .container { max-width: 1180px; margin: 0 auto; padding: 24px; }
 
   .stats { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
-  .stat { background: #fff; box-shadow: var(--shadow); border-radius: var(--radius); padding: 18px 20px; }
-  .stat:nth-child(2) { background: var(--mint); }
-  .stat:nth-child(3) { background: var(--sky); }
-  .stat .n { font-family: "Nunito", sans-serif; font-size: 36px; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat { background: #fff; border-radius: var(--radius); padding: 18px 20px; }
+  .stat .n { font-size: 30px; font-weight: 700; color: var(--ink); line-height: 1.1; }
   .stat .n small { font-size: 16px; font-weight: 500; color: var(--mute); }
-  .stat .l { font-size: 13px; color: var(--mute); font-weight: 700; }
-  .bar { height: 10px; background: var(--mint); border-radius: 99px; margin-top: 12px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--blue)); border-radius: 99px; transition: width 0.4s; }
+  .stat .l { font-size: 13px; color: var(--mute); }
+  .bar { height: 8px; background: var(--paper); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--gold); border-radius: 99px; transition: width 0.4s; }
   .stat.in .n { color: var(--ok); }
 
   .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
   .tools input { flex: 1; min-width: 200px; }
   .tools select { width: auto; }
-  .seg { display: inline-flex; background: #fff; border: 1.5px solid var(--line); border-radius: 99px; padding: 3px; }
-  .seg button { border: 0; background: transparent; padding: 7px 13px; font-size: 14px; border-radius: 99px; cursor: pointer; color: var(--mute); font-weight: 700; }
-  .seg button.on { background: var(--primary); color: #fff; }
+  .seg { display: inline-flex; background: #fff; border: 1.5px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 7px 13px; font-size: 14px; border-radius: 7px; cursor: pointer; color: var(--mute); font-weight: 500; }
+  .seg button.on { background: var(--ink); color: #fff; }
 
-  .tablewrap { background: #fff; box-shadow: var(--shadow); border-radius: var(--radius); overflow-x: auto; }
+  .tablewrap { background: #fff; border-radius: var(--radius); overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font-weight: 800; color: var(--primary-d); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; background: var(--mint); padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  td { padding: 12px 16px; border-bottom: 1px solid #e7f1f3; vertical-align: middle; }
-  td .code { font-family: "Nunito", sans-serif; font-size: 16px; letter-spacing: 2px; }
-  td .nm { font-weight: 700; color: var(--ink); }
+  th { text-align: left; font-weight: 500; color: var(--mute); font-size: 12.5px; padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--paper); vertical-align: middle; }
+  td .nm { font-weight: 500; color: var(--ink); }
   td .sm { font-size: 12.5px; color: var(--mute); }
-  .pill { display: inline-block; padding: 4px 11px; border-radius: 99px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .pill.yes { background: var(--mint); color: var(--primary-d); }
-  .pill.no { background: #eef3f5; color: var(--mute); }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+  .pill.yes { background: #e3f5ea; color: #17733f; }
+  .pill.no { background: var(--paper); color: var(--mute); }
   .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   .empty { padding: 40px; text-align: center; color: var(--mute); }
   .danger { color: var(--bad) !important; }
 
   @media (max-width: 760px) {
     .container { padding: 16px; }
-    header.top { padding: 12px 16px; gap: 10px; }
-    header.top h1 { order: 3; flex-basis: 100%; font-size: 18px; }
-    header.top .who { flex: 1; }
     .stats { grid-template-columns: 1fr 1fr; }
     .stats .stat:first-child { grid-column: 1 / -1; }
     thead { display: none; }
     table, tbody, tr, td { display: block; width: 100%; }
-    tr { padding: 12px 16px; border-bottom: 1px solid #e7f1f3; }
+    tr { padding: 12px 16px; border-bottom: 1px solid var(--line); }
     td { padding: 2px 0; border: 0; }
     td.hide-m { display: none; }
     .acts { justify-content: flex-start; margin-top: 8px; }
@@ -85,15 +75,14 @@
       <div class="field"><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div>
       <button class="btn gold block" type="submit">Masuk</button>
     </form>
-    <a class="back" href="/">← Kembali ke halaman pendaftaran</a>
   </div>
 </section>
 
 <section id="dashView" class="hidden">
   <header class="top">
-    <a class="btn ghost small" href="/panitia">← Menu</a>
     <h1 id="evName">Dashboard</h1>
     <span class="who" id="who"></span>
+    <a class="btn gold small" href="/scan">Buka scanner</a>
     <button class="btn ghost small" id="logout">Keluar</button>
   </header>
 
@@ -105,7 +94,7 @@
     </div>
 
     <div class="tools">
-      <input type="search" id="search" placeholder="Cari nama, email, no. HP, atau kode tiket">
+      <input type="search" id="search" placeholder="Cari nama, email, no. HP, atau no. tiket">
       <div class="seg" id="filter">
         <button data-f="all" class="on">Semua</button><button data-f="in">Sudah masuk</button><button data-f="out">Belum</button>
       </div>
@@ -115,7 +104,7 @@
 
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Peserta</th><th>Kontak</th><th>Kode tiket</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Peserta</th><th>Kontak</th><th>No. tiket</th><th>Status</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div id="empty" class="empty hidden">Belum ada peserta.</div>
@@ -162,7 +151,7 @@ function render() {
     if (filter === "in" && !p.scannedAt) return false;
     if (filter === "out" && p.scannedAt) return false;
     if (!s) return true;
-    return [p.name, p.email, p.phone, p.institution, p.short].join(" ").toLowerCase().includes(s);
+    return [p.name, p.email, p.phone, p.institution, p.id.slice(0, 6)].join(" ").toLowerCase().includes(s);
   });
   $("empty").classList.toggle("hidden", list.length > 0);
   $("empty").textContent = all.length ? "Tidak ada yang cocok." : "Belum ada peserta.";
@@ -170,7 +159,7 @@ function render() {
     <tr>
       <td><div class="nm">${esc(p.name)}</div><div class="sm">${esc(p.institution || "")}</div></td>
       <td><div>${esc(p.email)}</div><div class="sm">${esc(p.phone)}</div></td>
-      <td><b class="code">${esc(p.short)}</b><div class="sm">daftar ${esc(p.createdAt)}</div></td>
+      <td class="hide-m"><b>${esc(p.id.slice(0, 6).toUpperCase())}</b><div class="sm">daftar ${esc(p.createdAt)}</div></td>
       <td>${p.scannedAt
         ? `<span class="pill yes">Sudah masuk</span><div class="sm">${esc(p.scannedAt)} · ${esc(p.scannedBy || "")}</div>`
         : `<span class="pill no">Belum discan</span>`}</td>
@@ -222,12 +211,10 @@ $("loginForm").addEventListener("submit", async (e) => {
   const d = await r.json();
   if (!r.ok) { $("loginErr").textContent = d.error; $("loginErr").classList.remove("hidden"); return; }
   const next = new URLSearchParams(location.search).get("next");
-  if (next === "scan") location.href = "/scan";
-  else if (next === "panitia") location.href = "/panitia";
-  else showDash(d.user);
+  if (next === "scan") location.href = "/scan"; else showDash(d.user);
 });
 
-$("logout").addEventListener("click", async () => { await fetch("/api/logout", { method: "POST" }); location.href = "/"; });
+$("logout").addEventListener("click", async () => { await fetch("/api/logout", { method: "POST" }); showLogin(); });
 
 fetch("/api/me").then(r => r.json()).then(d => d.user ? showDash(d.user) : showLogin());
 </script>
