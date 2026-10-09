@@ -27,6 +27,7 @@ npm start
 Buka `http://localhost:3000`. Isi `.env` yang wajib diganti:
 
 - `EVENT_NAME`, `EVENT_DATE`, `EVENT_PLACE`, `QUOTA` untuk info acara.
+- `EVENT_START` (opsional) jam mulai acara untuk hitung mundur di halaman depan, contoh `2026-11-14T08:00:00+07:00`.
 - `ADMIN_ACCOUNTS` untuk akun panitia, format `user:password`, dipisah koma. Semua akun bisa membuka dashboard dan scanner.
 - `SECRET` untuk kunci tanda tangan tiket. Buat yang acak dengan perintah di bawah. **Jangan diganti setelah pendaftaran dibuka**, karena semua tiket lama akan jadi tidak valid.
 
@@ -36,13 +37,19 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Bukti transfer (acara berbayar)
 
-Isi `PAYMENT_INFO` di `.env` (atau di Environment Variables Vercel) dengan nomor rekening dan nominal. Begitu diisi:
+Atur dua variabel ini di `.env` (atau di Environment Variables Vercel):
 
-1. Form pendaftaran menampilkan info pembayaran dan **wajib upload gambar bukti transfer**. Foto dari HP otomatis dikecilkan (biasanya jadi 100-300 KB) sebelum dikirim.
-2. Tiket langsung muncul seperti biasa.
-3. Panitia bisa melihat gambarnya di dashboard lewat tombol **Lihat bukti**. Kalau buktinya tidak sesuai, peserta bisa dihapus dari dashboard.
+- `TICKET_PRICE` harga tiket dalam rupiah, angka saja. Bawaannya `160000` (Rp160.000). Isi `0` kalau acaranya gratis.
+- `PAYMENT_INFO` nomor rekening tujuan transfer. Pakai `\n` untuk ganti baris.
 
-Kosongkan `PAYMENT_INFO` kalau acaranya gratis; form kembali tanpa upload.
+Alurnya:
+
+1. Form pendaftaran menampilkan harga, info rekening (dengan tombol salin), dan **wajib upload gambar bukti transfer**. Foto dari HP otomatis dikecilkan (biasanya jadi 100-300 KB) sebelum dikirim.
+2. Tiket langsung muncul, dengan keterangan "bukti transfer lagi dicek panitia".
+3. Di dashboard, filter **Cek bayar** menampilkan bukti yang belum dicek. Buka **Cek bukti**, cocokkan nominal & tanggal, lalu klik **Terima (lunas)** atau **Tolak**. Setelah menerima, bukti berikutnya langsung terbuka.
+4. Kartu pemasukan di dashboard menghitung total uang dari peserta yang lunas, plus jumlah yang menunggu dan ditolak.
+5. Tiket yang pembayarannya **ditolak** akan ditolak scanner. Tiket yang belum dicek tetap bisa masuk, tapi scanner memberi tanda peringatan.
+6. **Export Excel** berisi kolom nominal, status pembayaran, siapa yang mengecek, dan link **Lihat bukti** ke gambar transfer (buka saat sudah login di browser). Ada juga sheet **Ringkasan** berisi total pemasukan.
 
 ## Mencoba scanner di HP
 
@@ -87,6 +94,7 @@ Tabel dibuat otomatis waktu web pertama kali dibuka, tidak perlu bikin manual.
    | `SECRET` | kunci acak (lihat cara bikin di atas) |
    | `ADMIN_ACCOUNTS` | akun panitia, misalnya `admin:passwordkuat,petugas1:pass1` |
    | `EVENT_NAME`, `EVENT_DATE`, `EVENT_PLACE`, `QUOTA` | info acara |
+   | `EVENT_START` | jam mulai untuk hitung mundur (opsional), contoh `2026-11-14T08:00:00+07:00` |
    | `TIMEZONE` | `Asia/Jakarta` |
    | `NODE_ENV` | `production` |
 
@@ -154,6 +162,12 @@ Sebelum masa sewa hosting habis, export data lewat tombol **Export Excel** di da
 
 Kolom form ada di `public/index.html` (tampilan) dan di bagian `/api/register` pada `server.js` (validasi dan penyimpanan). Kolom bawaan: nama, email, nomor HP, dan instansi/kampus (opsional). Satu email hanya bisa mendaftar sekali.
 
+## Tema & logo
+
+Tampilan mengikuti tema **F1 x Fast & Furious** (Y2K, retro, kertas, dominan biru). Warna dan font diatur di bagian atas `public/style.css`. Tagline "RADIANCE: From rising flames to ultimate glory" ada di `public/index.html`.
+
+Logo penyelenggara ada di `public/logos.png` dan tampil di halaman pendaftaran, tiket (termasuk gambar yang diunduh), menu panitia, dan login. Mau logonya lebih tajam? Export ulang deretan logo dari Canva sebagai PNG (latar transparan atau gelap, tinggi minimal 200px), lalu timpa file `public/logos.png` dengan nama yang sama.
+
 ## Struktur folder
 
 ```
@@ -165,6 +179,7 @@ public/tiket.html  halaman tiket + unduh gambar
 public/panitia.html menu panitia setelah login
 public/admin.html  login & dashboard admin
 public/scan.html   scanner kamera
-public/style.css   gaya bersama
+public/style.css   gaya bersama (warna & font tema)
+public/logos.png   deretan logo penyelenggara
 .env.example       contoh konfigurasi
 ```

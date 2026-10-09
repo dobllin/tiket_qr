@@ -13,12 +13,16 @@ const SECRET = process.env.SECRET;
 const EVENT_NAME = process.env.EVENT_NAME || "Nama Event";
 const EVENT_DATE = process.env.EVENT_DATE || "";
 const EVENT_PLACE = process.env.EVENT_PLACE || "";
+// Jam mulai acara untuk hitung mundur di halaman depan, contoh: 2026-11-14T08:00:00+07:00 (boleh kosong)
+const EVENT_START = Number.isNaN(Date.parse(process.env.EVENT_START || "")) ? null : new Date(process.env.EVENT_START).toISOString();
 const QUOTA = Number(process.env.QUOTA || 300);
 const TIMEZONE = process.env.TIMEZONE || "Asia/Jakarta";
 // Info pembayaran (rekening, nominal). Kalau diisi, peserta wajib upload gambar bukti transfer saat daftar,
 // dan panitia bisa melihatnya di dashboard.
 const PAYMENT_INFO = (process.env.PAYMENT_INFO || "").replace(/\\n/g, "\n").trim();
-const PAYMENT_REQUIRED = Boolean(PAYMENT_INFO);
+// Harga tiket dalam rupiah. Isi 0 kalau acaranya gratis (tidak perlu bukti transfer).
+const TICKET_PRICE = Math.max(0, Number(process.env.TICKET_PRICE ?? 160000) || 0);
+const PAYMENT_REQUIRED = TICKET_PRICE > 0 || Boolean(PAYMENT_INFO);
 const PROOF_MAX_BYTES = 2 * 1024 * 1024; // gambar sudah dikecilkan di browser, biasanya cuma 100-300 KB
 // Format: user:password,user2:password2
 const ACCOUNTS = Object.fromEntries(
@@ -95,6 +99,13 @@ async function initDb() {
       created_at     TEXT NOT NULL
     )
   `);
+  // Status pembayaran: pending (bukti belum dicek), paid (lunas), rejected (ditolak). Kosong = tidak perlu bayar.
+  const cols = (await all("PRAGMA table_info(participants)")).map((c) => c.name);
+  for (const c of ["pay_status", "pay_by", "pay_at"]) {
+    if (!cols.includes(c)) await db.execute(`ALTER TABLE participants ADD COLUMN ${c} TEXT`);
+  }
+  // Peserta lama yang sudah upload bukti tapi belum punya status -> menunggu dicek
+  await db.execute("UPDATE participants SET pay_status = 'pending' WHERE pay_status IS NULL AND id IN (SELECT participant_id FROM proofs)");
   for (const { id } of await all("SELECT id FROM participants WHERE short_code IS NULL")) {
     for (;;) {
       try { await run("UPDATE participants SET short_code = ? WHERE id = ?", [makeShort(), id]); break; }
@@ -119,6 +130,7 @@ const q = {
   setScanned: (at, by, id) => run("UPDATE participants SET scanned_at = ?, scanned_by = ? WHERE id = ?", [at, by, id]),
   resetOne: (id) => run("UPDATE participants SET scanned_at = NULL, scanned_by = NULL WHERE id = ?", [id]),
   resetAll: () => run("UPDATE participants SET scanned_at = NULL, scanned_by = NULL"),
+  setPay: (status, by, at, id) => run("UPDATE participants SET pay_status = ?, pay_by = ?, pay_at = ? WHERE id = ?", [status, by, at, id]),
   remove: async (id) => {
     await db.batch([
       { sql: "DELETE FROM proofs WHERE participant_id = ?", args: [id] },
@@ -144,9 +156,9 @@ async function registerTx(p, proof) {
     try {
       // Peserta & bukti transfer disimpan bersamaan: dua-duanya masuk, atau tidak sama sekali
       const steps = [{
-        sql: `INSERT INTO participants (id, short_code, name, email, phone, institution, created_at)
-              SELECT ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM participants) < ?`,
-        args: [p.id, p.short_code, p.name, p.email, p.phone, p.institution, p.created_at, QUOTA],
+        sql: `INSERT INTO participants (id, short_code, name, email, phone, institution, created_at, pay_status)
+              SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM participants) < ?`,
+        args: [p.id, p.short_code, p.name, p.email, p.phone, p.institution, p.created_at, proof ? "pending" : null, QUOTA],
       }];
       if (proof) steps.push({
         sql: "INSERT INTO proofs (participant_id, mime, data, created_at) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM participants WHERE id = ?)",
@@ -212,8 +224,8 @@ const clean = (v, max = 120) => String(v || "").trim().slice(0, max);
 app.get("/api/event", async (req, res) => {
   const used = await q.count();
   res.json({
-    name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE, quota: QUOTA, remaining: Math.max(0, QUOTA - used),
-    payment: { required: PAYMENT_REQUIRED, info: PAYMENT_INFO },
+    name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE, start: EVENT_START, quota: QUOTA, remaining: Math.max(0, QUOTA - used),
+    payment: { required: PAYMENT_REQUIRED, info: PAYMENT_INFO, price: TICKET_PRICE },
   });
 });
 
@@ -266,6 +278,7 @@ app.get("/api/ticket", async (req, res) => {
     name: p.name,
     institution: p.institution,
     ticketNo: p.short_code,
+    payStatus: p.pay_status,
     event: { name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE },
     qr,
   });
@@ -318,6 +331,8 @@ app.post("/api/scan", auth, async (req, res) => {
   if (!id) return res.json({ status: "invalid", message: "QR tidak dikenali / palsu." });
   const p = await q.byId(id);
   if (!p) return res.json({ status: "invalid", message: "Tiket tidak terdaftar." });
+  if (p.pay_status === "rejected")
+    return res.json({ status: "invalid", message: `${p.name}: pembayaran ditolak panitia. Arahkan ke meja registrasi.` });
 
   const changed = await q.markScanned(now(), req.session.user, id);
   if (!changed) {
@@ -332,7 +347,7 @@ app.post("/api/scan", auth, async (req, res) => {
   res.json({
     status: "ok",
     message: "Silakan masuk.",
-    participant: { name: row.name, institution: row.institution, scannedAt: row.scanned_at },
+    participant: { name: row.name, institution: row.institution, scannedAt: row.scanned_at, payStatus: row.pay_status },
   });
 });
 
@@ -350,14 +365,33 @@ app.get("/api/participants", auth, async (req, res) => {
     scannedAt: p.scanned_at,
     scannedBy: p.scanned_by,
     hasProof: Boolean(p.has_proof),
+    payStatus: p.pay_status,
+    payBy: p.pay_by,
+    payAt: p.pay_at,
   }));
-  res.json({ quota: QUOTA, total: rows.length, scanned: await q.countScanned(), rows });
+  const count = (st) => rows.filter((r) => r.payStatus === st).length;
+  const payment = {
+    required: PAYMENT_REQUIRED, price: TICKET_PRICE,
+    paid: count("paid"), pending: count("pending"), rejected: count("rejected"),
+  };
+  payment.revenue = payment.paid * TICKET_PRICE;
+  res.json({ quota: QUOTA, total: rows.length, scanned: await q.countScanned(), payment, rows });
 });
 
 app.post("/api/participants/:id/status", auth, async (req, res) => {
   if (!(await q.byId(req.params.id))) return res.status(404).json({ error: "Peserta tidak ditemukan." });
   if (req.body.scanned) await q.setScanned(now(), req.session.user + " (manual)", req.params.id);
   else await q.resetOne(req.params.id);
+  res.json({ ok: true });
+});
+
+// Verifikasi bukti transfer oleh panitia
+app.post("/api/participants/:id/payment", auth, async (req, res) => {
+  const status = String(req.body.status || "");
+  if (!["paid", "rejected", "pending"].includes(status)) return res.status(400).json({ error: "Status pembayaran tidak dikenal." });
+  if (!(await q.byId(req.params.id))) return res.status(404).json({ error: "Peserta tidak ditemukan." });
+  const done = status !== "pending";
+  await q.setPay(status, done ? req.session.user : null, done ? now() : null, req.params.id);
   res.json({ ok: true });
 });
 
@@ -381,6 +415,16 @@ app.delete("/api/participants/:id", auth, async (req, res) => {
 });
 
 app.get("/api/export.xlsx", auth, async (req, res) => {
+  const PAY_LABEL = { paid: "Lunas", pending: "Menunggu cek", rejected: "Ditolak" };
+  const base = `${req.protocol}://${req.get("host")}`;
+  const list = (await q.all()).reverse();
+  const head = (ws, last) => {
+    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF26324C" } };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+    if (last) ws.autoFilter = { from: "A1", to: last + "1" };
+  };
+
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Peserta");
   ws.columns = [
@@ -391,13 +435,17 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
     { header: "No. HP", key: "phone", width: 16 },
     { header: "Instansi / Kampus", key: "institution", width: 26 },
     { header: "Waktu Daftar", key: "created", width: 20 },
-    { header: "Status", key: "status", width: 14 },
+    { header: "Nominal", key: "price", width: 14 },
+    { header: "Status Pembayaran", key: "pay", width: 18 },
+    { header: "Dicek Oleh", key: "payBy", width: 16 },
+    { header: "Waktu Dicek", key: "payAt", width: 20 },
+    { header: "Bukti Transfer", key: "proof", width: 16 },
+    { header: "Status Masuk", key: "status", width: 14 },
     { header: "Waktu Masuk", key: "scanned", width: 20 },
     { header: "Discan Oleh", key: "by", width: 18 },
-    { header: "Bukti Transfer", key: "pay", width: 14 },
   ];
-  (await q.all()).reverse().forEach((p, i) =>
-    ws.addRow({
+  list.forEach((p, i) => {
+    const row = ws.addRow({
       no: i + 1,
       ticket: p.short_code,
       name: p.name,
@@ -405,16 +453,41 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
       phone: p.phone,
       institution: p.institution || "",
       created: p.created_at,
+      price: p.pay_status ? TICKET_PRICE : "",
+      pay: PAY_LABEL[p.pay_status] || "-",
+      payBy: p.pay_by || "",
+      payAt: p.pay_at || "",
+      proof: p.has_proof ? { text: "Lihat bukti", hyperlink: `${base}/api/proof/${encodeURIComponent(p.id)}` } : "-",
       status: p.scanned_at ? "Sudah masuk" : "Belum",
       scanned: p.scanned_at || "",
       by: p.scanned_by || "",
-      pay: p.has_proof ? "Ada" : "-",
-    })
-  );
-  ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-  ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF14213D" } };
-  ws.views = [{ state: "frozen", ySplit: 1 }];
-  ws.autoFilter = { from: "A1", to: "K1" };
+    });
+    if (p.has_proof) row.getCell("proof").font = { color: { argb: "FF2B5BD7" }, underline: true };
+    const color = { paid: "FFE1F3EA", pending: "FFFFF1D6", rejected: "FFFDE2E2" }[p.pay_status];
+    if (color) row.getCell("pay").fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+  });
+  ws.getColumn("price").numFmt = '"Rp"#,##0';
+  head(ws, "O");
+
+  // Ringkasan pembayaran
+  const sum = wb.addWorksheet("Ringkasan");
+  sum.columns = [{ header: "Keterangan", key: "k", width: 30 }, { header: "Jumlah", key: "v", width: 20 }];
+  const n = (st) => list.filter((p) => p.pay_status === st).length;
+  [
+    ["Harga tiket", TICKET_PRICE, true],
+    ["Total pendaftar", list.length],
+    ["Lunas", n("paid")],
+    ["Menunggu cek bukti", n("pending")],
+    ["Ditolak", n("rejected")],
+    ["Total pemasukan (lunas)", n("paid") * TICKET_PRICE, true],
+    ["Potensi pemasukan (lunas + menunggu)", (n("paid") + n("pending")) * TICKET_PRICE, true],
+    ["Sudah masuk venue", list.filter((p) => p.scanned_at).length],
+    ["Diekspor pada", now()],
+  ].forEach(([k, v, money]) => {
+    const r = sum.addRow({ k, v });
+    if (money) r.getCell("v").numFmt = '"Rp"#,##0';
+  });
+  head(sum);
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", `attachment; filename="peserta-${Date.now()}.xlsx"`);

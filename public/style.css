@@ -1,142 +1,204 @@
+/* Tema: F1 x Fast & Furious · Y2K · retro · paper (dominan biru) */
 :root {
-  --ink: #0d3b4f;        /* teks utama: biru tosca tua */
-  --ink-2: #14536b;
-  --gold: #14b8a6;       /* warna utama: tosca (nama lama dipertahankan) */
-  --primary: #14b8a6;
-  --primary-d: #0d8f86;
-  --mint: #e0f7f3;
-  --sky: #e4f2fb;
-  --blue: #2b8fd6;
-  --purple: #2b8fd6;     /* dipetakan ke biru klinik */
-  --pink: #ff9eb5;       /* aksen gusi, dipakai sedikit saja */
-  --yellow: #ffe7a0;
-  --paper: #f3fafb;
-  --line: #d3e7ec;
-  --text: #18323d;
-  --mute: #5f7a85;
-  --ok: #12a37a;
-  --bad: #e5484d;
-  --warn: #f08c00;
-  --radius: 20px;
-  --shadow: 0 16px 38px -16px rgba(13, 59, 79, 0.28);
-  --shadow-sm: 0 6px 16px -8px rgba(13, 59, 79, 0.3);
+  --ink: #171c2f;        /* navy paling gelap: teks judul, garis */
+  --ink-2: #26324c;      /* navy */
+  --slate: #323d51;
+  --steel: #687899;      /* biru abu */
+  --peach: #ffa489;
+  --red: #b6192a;        /* merah balap, untuk tombol utama */
+  --red-d: #8f1220;
+  --maroon: #541b2e;
+  --paper: #fef6eb;      /* kertas krem */
+  --paper-2: #f6e9d6;
+
+  /* nama lama dipertahankan supaya semua halaman tetap jalan */
+  --gold: var(--red);
+  --primary: #26324c;
+  --primary-d: #171c2f;
+  --blue: #687899;
+  --purple: #687899;
+  --mint: #e4e8f1;       /* tint biru muda */
+  --sky: #ffe6dc;        /* tint peach */
+  --pink: #ffa489;
+  --yellow: #ffd9a8;
+  --line: #ddd0bd;
+  --text: #1d2236;
+  --mute: #686d7e;
+  --ok: #1f8a5b;
+  --bad: #b6192a;
+  --warn: #d9822b;
+  --radius: 14px;
+  --shadow: 5px 5px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+
+  --f-head: "Chakra Petch", "Space Grotesk", system-ui, sans-serif;
+  --f-body: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .2 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--f-body);
   color: var(--text);
-  background: var(--paper);
+  background: var(--noise), var(--paper);
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { font-family: "Nunito", "Plus Jakarta Sans", sans-serif; color: var(--ink); line-height: 1.15; margin: 0; letter-spacing: -0.01em; }
-a { color: var(--primary-d); }
+h1, h2, h3 { font-family: var(--f-head); color: var(--ink); line-height: 1.05; margin: 0; letter-spacing: -0.01em; text-transform: uppercase; font-weight: 700; }
+a { color: var(--ink-2); }
 button, input, select { font: inherit; }
+.mono { font-family: var(--f-mono); }
 
 /* Form */
-label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-label .opt { font-weight: 500; color: var(--mute); }
+label { display: block; font-family: var(--f-mono); font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+label .opt { font-weight: 400; color: var(--mute); text-transform: none; letter-spacing: 0; }
 input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="search"], select {
   width: 100%;
-  padding: 13px 15px;
-  border: 1.5px solid var(--line);
-  border-radius: 14px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
   background: #fff;
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: box-shadow 0.12s, transform 0.12s;
 }
-input::placeholder { color: #9fb3ba; }
+input::placeholder { color: #a4a2a6; }
 /* Di HP huruf kolom isian minimal 16px supaya iPhone tidak otomatis zoom saat mengetik */
 @media (max-width: 760px) {
   input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="search"], select { font-size: 16px; }
 }
-input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.16); }
+input:focus, select:focus { box-shadow: 3px 3px 0 var(--steel); }
 .field { margin-bottom: 16px; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 22px;
-  border: 1.5px solid transparent; border-radius: 99px;
-  background: var(--ink); color: #fff;
-  font-weight: 700; cursor: pointer; text-decoration: none;
-  transition: transform 0.1s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+  padding: 11px 20px;
+  border: 2px solid var(--ink); border-radius: 10px;
+  background: var(--ink-2); color: #fff;
+  font-family: var(--f-mono); font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+  cursor: pointer; text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.08s, box-shadow 0.08s, background 0.15s, opacity 0.15s;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-.btn:active { transform: translateY(1px); box-shadow: none; }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-.btn:focus-visible { outline: 3px solid rgba(20, 184, 166, 0.45); outline-offset: 2px; }
-.btn.gold { background: var(--primary); color: #fff; }
-.btn.gold:hover { background: var(--primary-d); }
-.btn.purple { background: var(--blue); color: #fff; }
-.btn.ghost { background: #fff; color: var(--ink); border-color: var(--line); }
-.btn.ghost:hover { border-color: var(--primary); }
-.btn.small { padding: 7px 14px; font-size: 13px; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
+.btn:focus-visible { outline: 3px solid var(--steel); outline-offset: 3px; }
+.btn.gold { background: var(--red); color: #fff; }
+.btn.gold:hover { background: var(--red-d); }
+.btn.purple { background: var(--steel); color: #fff; }
+.btn.ghost { background: #fff; color: var(--ink); }
+.btn.ghost:hover { background: var(--paper); }
+.btn.small { padding: 6px 12px; font-size: 12.5px; box-shadow: 2px 2px 0 var(--ink); }
+.btn.small:hover { box-shadow: 3px 3px 0 var(--ink); }
+.btn.small:active { box-shadow: 0 0 0 var(--ink); transform: translate(2px, 2px); }
 .btn.block { width: 100%; }
 
-.alert { padding: 12px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
-.alert.err { background: #fdecee; color: #a3262d; }
+.alert { padding: 11px 14px; border: 2px solid var(--red); border-radius: 10px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.alert.err { background: #fde9e4; color: var(--red-d); }
 .hidden { display: none !important; }
 .mute { color: var(--mute); }
 
-/* Label kecil & gelembung */
+/* Label kecil */
 .chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 99px;
-  background: var(--mint); color: var(--primary-d); font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 12px; border: 2px solid var(--ink); border-radius: 6px;
+  background: #fff; color: var(--ink); font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
 }
 .sticker {
   position: absolute; display: inline-flex; align-items: center; justify-content: center; text-align: center;
-  font-family: "Nunito", sans-serif; font-weight: 800; line-height: 1.1;
-  box-shadow: var(--shadow-sm); user-select: none; pointer-events: none;
+  font-family: var(--f-mono); font-weight: 700; line-height: 1.15; text-transform: uppercase;
+  user-select: none; pointer-events: none;
 }
-.tooth { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; }
+
+/* ---------- Ornamen tema ---------- */
+/* Bendera finish kotak-kotak */
+.checker {
+  background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 16px 16px;
+}
+/* Titik halftone ala koran / poster */
+.halftone {
+  background-image: radial-gradient(currentColor 1.4px, transparent 1.6px);
+  background-size: 9px 9px;
+}
+/* Strip palet warna seperti di moodboard */
+.palette { display: flex; height: 12px; }
+.palette i { flex: 1; }
+.palette i:nth-child(1) { background: #171c2f; }
+.palette i:nth-child(2) { background: #26324c; }
+.palette i:nth-child(3) { background: #323d51; }
+.palette i:nth-child(4) { background: #687899; }
+.palette i:nth-child(5) { background: #ffa489; }
+.palette i:nth-child(6) { background: #b6192a; }
+.palette i:nth-child(7) { background: #541b2e; }
+/* Deretan logo penyelenggara */
+.logos { display: block; height: 52px; width: auto; max-width: 100%; align-self: flex-start; object-fit: contain; }
+/* Tombol keyboard "F1" */
+.keycap {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 42px; border-radius: 9px;
+  background: linear-gradient(#3a3f4f, #1c1f29); color: #fff; font-family: var(--f-mono); font-size: 13px; font-weight: 700;
+  box-shadow: inset 0 -5px 0 rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.25), 2px 3px 0 var(--ink);
+}
+
+/* Pita berjalan */
+.marquee { background: var(--ink); color: #fff; overflow: hidden; white-space: nowrap;
+  font-family: var(--f-mono); font-weight: 700; font-size: 13.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+.marquee .track { display: inline-flex; padding: 9px 0; animation: run 36s linear infinite; }
+.marquee span { padding: 0 16px; display: inline-flex; align-items: center; gap: 14px; }
+.marquee span::after { content: "✦"; color: var(--peach); }
+.marquee span:nth-child(3n+2) { color: var(--peach); }
+@keyframes run { to { transform: translateX(-50%); } }
 
 /* Tiket */
 .ticket {
   display: flex;
   background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 24px 50px -22px rgba(13, 59, 79, 0.35);
-  max-width: 660px;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 7px 7px 0 var(--ink);
+  max-width: 680px;
   margin: 0 auto;
   position: relative;
 }
-.ticket .main { flex: 1; padding: 28px 28px 22px; min-width: 0; border-radius: 24px 0 0 24px; position: relative; overflow: hidden; }
-.ticket .main::after { content: ""; position: absolute; right: -40px; top: -40px; width: 150px; height: 150px; border-radius: 50%; background: var(--mint); z-index: 0; }
+.ticket .main { flex: 1; padding: 0 26px 20px; min-width: 0; border-radius: 14px 0 0 14px; position: relative; overflow: hidden; }
+.ticket .main::before { content: ""; display: block; height: 14px; margin: 0 -26px 22px; background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 14px 14px; border-bottom: 2.5px solid var(--ink); }
+.ticket .main::after { content: ""; position: absolute; right: -30px; bottom: -30px; width: 170px; height: 170px; color: var(--steel); opacity: 0.25;
+  background-image: radial-gradient(currentColor 1.6px, transparent 1.8px); background-size: 9px 9px; border-radius: 50%; z-index: 0; }
 .ticket .main > * { position: relative; z-index: 1; }
 .ticket .stub {
   width: 236px; flex: none;
-  background: linear-gradient(160deg, #e3f8f4, #d8eefa);
+  background: var(--ink-2);
+  color: #fff;
   padding: 22px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative;
-  border-left: 2px dashed #9fd4cf;
-  border-radius: 0 24px 24px 0;
+  border-left: 2.5px dashed var(--paper);
+  border-radius: 0 13px 13px 0;
 }
 .ticket .stub::before, .ticket .stub::after {
-  content: ""; position: absolute; left: -15px; width: 28px; height: 28px; border-radius: 50%;
-  background: var(--paper);
+  content: ""; position: absolute; left: -16px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--paper); border: 2.5px solid var(--ink);
 }
-.ticket .stub::before { top: -14px; }
-.ticket .stub::after { bottom: -14px; }
-.ticket .stub img { width: 100%; max-width: 186px; background: #fff; padding: 10px; border-radius: 16px; display: block; box-shadow: var(--shadow-sm); }
-.ticket .codelbl { margin-top: 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary-d); }
-.ticket .no { margin-top: 4px; font-family: "Nunito", sans-serif; font-weight: 900; color: var(--ink); letter-spacing: 6px; background: #fff; border-radius: 99px; padding: 4px 12px 4px 18px; font-size: 24px; line-height: 1.2; user-select: all; box-shadow: var(--shadow-sm); }
-.ticket .k { font-size: 11.5px; color: var(--mute); margin: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.ticket .stub::before { top: -17px; clip-path: inset(50% 0 0 0); }
+.ticket .stub::after { bottom: -17px; clip-path: inset(0 0 50% 0); }
+.ticket .stub img { width: 100%; max-width: 186px; background: #fff; padding: 10px; border-radius: 10px; display: block; border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--peach); }
+.ticket .codelbl { margin-top: 16px; font-family: var(--f-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--peach); }
+.ticket .no { margin-top: 6px; font-family: var(--f-mono); font-weight: 700; color: var(--ink); letter-spacing: 6px; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 3px 10px 3px 16px; font-size: 24px; line-height: 1.2; user-select: all; }
+.ticket .k { font-family: var(--f-mono); font-size: 11px; color: var(--mute); margin: 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
 .ticket .v { font-size: 16px; font-weight: 600; color: var(--ink); margin: 0 0 14px; }
-.ticket .v.big { font-family: "Nunito", sans-serif; font-size: 28px; font-weight: 900; line-height: 1.1; margin-top: 2px; }
-.ticket .event { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: #fff; background: var(--primary); border-radius: 99px; padding: 5px 13px; margin-bottom: 18px; }
+.ticket .v.big { font-family: var(--f-head); font-size: 30px; font-weight: 700; line-height: 1.05; margin-top: 2px; text-transform: uppercase; }
+.ticket .event { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12.5px; font-weight: 700; color: #fff; background: var(--red); border: 2px solid var(--ink); border-radius: 6px; padding: 4px 11px; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.05em; }
 
 @media (max-width: 600px) {
   .ticket { flex-direction: column; }
-  .ticket .main { border-radius: 24px 24px 0 0; }
-  .ticket .stub { width: auto; border-left: 0; border-top: 2px dashed #9fd4cf; padding: 26px; border-radius: 0 0 24px 24px; }
-  .ticket .stub::before, .ticket .stub::after { top: -15px; bottom: auto; }
-  .ticket .stub::before { left: -14px; }
-  .ticket .stub::after { left: auto; right: -14px; }
+  .ticket .main { border-radius: 14px 14px 0 0; }
+  .ticket .stub { width: auto; border-left: 0; border-top: 2.5px dashed var(--paper); padding: 26px; border-radius: 0 0 13px 13px; }
+  .ticket .stub::before, .ticket .stub::after { top: -17px; bottom: auto; }
+  .ticket .stub::before { left: -17px; clip-path: inset(0 0 0 50%); }
+  .ticket .stub::after { left: auto; right: -17px; clip-path: inset(0 50% 0 0); }
   .ticket .stub img { max-width: 240px; }
 }
 

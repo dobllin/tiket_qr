@@ -3,176 +3,347 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#14b8a6">
+<meta name="theme-color" content="#171c2f">
 <title>Pendaftaran</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
-  /* Pita berjalan */
-  .marquee { background: var(--ink); color: #fff; overflow: hidden; white-space: nowrap;
-    font-family: "Nunito", sans-serif; font-weight: 800; font-size: 14.5px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .marquee .track { display: inline-flex; padding: 9px 0; animation: run 32s linear infinite; }
-  .marquee span { padding: 0 18px; display: inline-flex; align-items: center; gap: 10px; }
-  .marquee span:nth-child(even) { color: #7fe3d6; }
-  .marquee svg { width: 14px; height: 14px; fill: currentColor; }
-  @keyframes run { to { transform: translateX(-50%); } }
+  .wrap { min-height: calc(100vh - 40px); display: grid; grid-template-columns: 1.08fr 1fr; }
 
-  .wrap { min-height: calc(100vh - 40px); display: grid; grid-template-columns: 1.05fr 1fr; }
-
-  .hero { position: relative; overflow: hidden; color: #fff; padding: 52px 48px 44px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
-    background: radial-gradient(circle at 15% 110%, rgba(255,255,255,0.18) 0 160px, transparent 161px),
-                linear-gradient(150deg, #19c3b1 0%, #12a6a6 45%, #2b8fd6 100%); }
-  .hero .chip { background: rgba(255,255,255,0.2); color: #fff; backdrop-filter: blur(4px); }
-  .hero h1 { color: #fff; font-size: clamp(38px, 5.2vw, 66px); font-weight: 900; margin: 22px 0 22px; max-width: 12ch; position: relative; z-index: 1; }
-  .hero .tag { font-size: 17px; font-weight: 600; color: #e6fbf8; margin: -8px 0 22px; position: relative; z-index: 1; max-width: 30ch; }
-  .info { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; }
-  .info div { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; background: rgba(255,255,255,0.95); color: var(--ink);
-    border-radius: 99px; padding: 9px 16px; font-weight: 700; font-size: 14.5px; box-shadow: var(--shadow-sm); }
+  /* ---------- Sisi kiri: poster ---------- */
+  .hero { position: relative; overflow: hidden; color: #fff; padding: 44px 48px 40px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 30px;
+    background: radial-gradient(ellipse at 110% -10%, rgba(104,120,153,0.55), transparent 55%),
+                linear-gradient(165deg, #26324c 0%, #171c2f 70%); border-right: 3px solid var(--ink); }
+  .hero::before { content: ""; position: absolute; inset: auto -60px -80px auto; width: 380px; height: 380px; color: #687899; opacity: 0.35;
+    background-image: radial-gradient(currentColor 1.8px, transparent 2px); background-size: 11px 11px; border-radius: 50%;
+    -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
+  .hero > * { position: relative; z-index: 1; }
+  .hero > svg, .hero > .sticker, .hero > .keycap { z-index: 0; }
+  .hero .chip { background: var(--peach); border-color: var(--peach); color: var(--ink); }
+  .hero .over { font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.18em; color: var(--peach); margin: 26px 0 8px; text-transform: uppercase; }
+  /* judul chrome ala Y2K */
+  .hero h1 { font-size: clamp(50px, 7vw, 100px); line-height: 0.88; margin: 0 0 16px; max-width: 9ch;
+    background: linear-gradient(180deg, #ffffff 0%, #e3e8f3 36%, #7d8aa8 50%, #f7f9fc 60%, #b7c1d6 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(4px 4px 0 var(--red)) drop-shadow(0 0 22px rgba(255, 164, 137, 0.25)); }
+  .hero .tag { font-family: var(--f-mono); font-size: 14px; color: #d9dfec; margin: 0 0 24px; max-width: 34ch; }
+  .hero .tag b { color: #fff; }
+  .info { display: flex; flex-direction: column; gap: 10px; }
+  .info div { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; background: var(--paper); color: var(--ink);
+    border: 2px solid var(--ink); border-radius: 8px; padding: 7px 14px; font-weight: 600; font-size: 14.5px; box-shadow: 3px 3px 0 var(--red); }
   .info div:empty { display: none; }
-  .info svg { width: 18px; height: 18px; flex: none; color: var(--primary-d); }
+  .info svg { width: 18px; height: 18px; flex: none; color: var(--red); }
 
-  .slots { position: relative; z-index: 1; align-self: flex-start; background: #fff; color: var(--ink); border-radius: 20px; padding: 16px 20px;
-    box-shadow: var(--shadow); min-width: 260px; }
+  /* hitung mundur */
+  .countdown { margin-top: 22px; }
+  .countdown > span { display: block; font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--peach); text-transform: uppercase; margin-bottom: 8px; }
+  .countdown .digits { display: flex; gap: 8px; }
+  .countdown .digits div { background: #0d1020; border: 2px solid #687899; border-radius: 8px; padding: 6px 8px 4px; min-width: 62px; text-align: center; }
+  .countdown b { display: block; font-family: var(--f-mono); font-size: 28px; line-height: 1.1; color: #fff; font-variant-numeric: tabular-nums; }
+  .countdown small { font-family: var(--f-mono); font-size: 10px; color: #9aa6c1; text-transform: uppercase; letter-spacing: 0.1em; }
+  .countdown .live { font-family: var(--f-head); font-size: 26px; color: #fff; text-transform: uppercase; }
+
+  /* garis kecepatan */
+  .speed { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .speed i { position: absolute; right: -40%; height: 2px; width: 30%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55)); animation: dash 1.6s linear infinite; }
+  .speed i:nth-child(1) { top: 14%; animation-duration: 1.3s; }
+  .speed i:nth-child(2) { top: 31%; width: 18%; animation-duration: 2.1s; animation-delay: 0.4s; }
+  .speed i:nth-child(3) { top: 47%; animation-duration: 1.7s; animation-delay: 0.9s; background: linear-gradient(90deg, transparent, rgba(255,164,137,0.6)); }
+  .speed i:nth-child(4) { top: 63%; width: 22%; animation-duration: 1.2s; animation-delay: 0.2s; }
+  .speed i:nth-child(5) { top: 78%; animation-duration: 1.9s; animation-delay: 1.1s; background: linear-gradient(90deg, transparent, rgba(182,25,42,0.8)); }
+  .speed i:nth-child(6) { top: 90%; width: 14%; animation-duration: 1.4s; animation-delay: 0.6s; }
+  @keyframes dash { to { transform: translateX(-560%); } }
+
+  /* stiker gen z */
+  .gz { position: absolute; z-index: 2; font-family: var(--f-mono); font-weight: 700; font-size: 12.5px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 7px 12px; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); pointer-events: none;
+    transform: rotate(var(--r)); animation: wob 3.4s ease-in-out infinite; }
+  @keyframes wob { 50% { transform: rotate(calc(var(--r) * -0.6)) scale(1.07); } }
+  .g1 { --r: 7deg; right: 22px; top: 300px; background: var(--peach); color: var(--ink); }
+  .g2 { --r: -6deg; right: 40px; top: 610px; background: #fff; color: var(--ink); animation-delay: 0.7s; }
+  .g3 { --r: 5deg; right: 28px; bottom: 150px; background: var(--red); color: #fff; animation-delay: 1.3s; }
+  .g4 { --r: -8deg; right: 210px; bottom: 74px; background: #ffd9a8; color: var(--ink); animation-delay: 2s; }
+
+  .bottom { display: flex; flex-direction: column; gap: 18px; }
+  .slots { align-self: flex-start; background: var(--paper); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 12px; padding: 14px 18px;
+    box-shadow: 5px 5px 0 var(--peach); min-width: 280px; }
   .slots .top { display: flex; align-items: baseline; gap: 10px; }
-  .slots b { font-family: "Nunito", sans-serif; color: var(--primary); font-size: 40px; font-weight: 900; line-height: 1; }
-  .slots .top span { font-size: 14px; color: var(--mute); font-weight: 700; }
-  .slots .bar { height: 10px; border-radius: 99px; background: var(--mint); margin-top: 12px; overflow: hidden; }
-  .slots .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--blue)); border-radius: 99px; transition: width 0.8s; }
+  .slots b { font-family: var(--f-head); color: var(--red); font-size: 44px; line-height: 1; }
+  .slots .top span { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .slots .bar { height: 12px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; margin-top: 10px; overflow: hidden; }
+  .slots .bar i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #d43a48 8px 16px); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
   .slots small { display: block; margin-top: 8px; color: var(--mute); font-size: 12.5px; font-weight: 600; }
+  .org { display: flex; flex-direction: column; gap: 8px; }
+  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #9aa6c1; text-transform: uppercase; }
 
-  /* Ilustrasi gigi & gelembung */
-  .bigtooth { position: absolute; right: -40px; top: 50%; width: 330px; height: 330px; transform: translateY(-50%) rotate(-8deg); fill: rgba(255,255,255,0.13); pointer-events: none; }
-  .bubble { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.22); border: 2px solid rgba(255,255,255,0.35); animation: float 6s ease-in-out infinite; pointer-events: none; }
-  .b1 { width: 22px; height: 22px; right: 70px; top: 170px; }
-  .b2 { width: 12px; height: 12px; right: 48px; top: 210px; animation-delay: 1s; }
-  .b3 { width: 34px; height: 34px; right: 260px; bottom: 160px; animation-delay: 2s; }
-  @keyframes float { 50% { transform: translateY(-10px); } }
-  .s1 { right: 36px; top: 40px; width: 104px; height: 104px; border-radius: 50%; background: #fff; color: var(--primary-d); font-size: 15px; animation: float 5s ease-in-out infinite; }
-  .s1 svg { width: 26px; height: 26px; fill: var(--primary); display: block; margin: 0 auto 2px; }
-  .s2 { right: 34px; bottom: 120px; background: var(--pink); color: #6b1c33; padding: 8px 16px; border-radius: 99px; font-size: 15px; }
-  .s3 { right: 160px; bottom: 50px; background: #fff; color: var(--ink); padding: 8px 16px; border-radius: 99px; font-size: 15px; }
+  /* Ornamen */
+  .flag { position: absolute; right: 44px; top: 34px; width: 96px; height: 96px; transform: rotate(8deg); animation: wave 3.2s ease-in-out infinite; transform-origin: 10% 100%; }
+  @keyframes wave { 50% { transform: rotate(2deg); } }
+  .circuit { position: absolute; right: -30px; top: 42%; width: 280px; height: 200px; opacity: 0.9; pointer-events: none; }
+  .spark { position: absolute; fill: #fff; pointer-events: none; animation: twinkle 2.6s ease-in-out infinite; }
+  .sp1 { width: 34px; right: 170px; top: 60px; }
+  .sp2 { width: 18px; right: 150px; top: 112px; animation-delay: 0.8s; fill: var(--peach); }
+  .sp3 { width: 26px; right: 60px; bottom: 210px; animation-delay: 1.4s; }
+  @keyframes twinkle { 50% { transform: scale(0.7) rotate(20deg); opacity: 0.6; } }
+  .hero .keycap { position: absolute; right: 120px; bottom: 170px; transform: rotate(-10deg); }
 
-  .formside { padding: 52px 48px; display: flex; align-items: center; justify-content: center; }
-  .card { width: 100%; max-width: 440px; background: #fff; border-radius: 26px; padding: 32px 30px; box-shadow: var(--shadow); position: relative; }
-  .card h2 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
-  .card h2 mark { background: linear-gradient(transparent 55%, #bff0e8 55%); padding: 0 4px; color: inherit; }
-  .card p.mute { margin: 0 0 22px; font-weight: 500; }
-  .card .btn.block { font-size: 16px; padding: 14px 20px; margin-top: 4px; }
-  .card .fine { font-size: 12.5px; color: var(--mute); text-align: center; margin: 14px 0 0; }
-  .badge { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); width: 48px; height: 48px; border-radius: 50%;
-    background: var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); border: 4px solid var(--paper); }
-  .badge svg { width: 24px; height: 24px; fill: #fff; }
-  .staff { display: block; text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1.5px dashed var(--line);
-    font-size: 13.5px; color: var(--mute); text-decoration: none; }
-  .staff b { color: var(--primary-d); }
+  /* ---------- Sisi kanan: form ---------- */
+  .formside { padding: 52px 48px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .card { width: 100%; max-width: 450px; background: #fff; border: 2.5px solid var(--ink); border-radius: 16px; box-shadow: 8px 8px 0 var(--ink-2); position: relative; overflow: hidden; }
+  .card .checker { height: 14px; border-bottom: 2.5px solid var(--ink); }
+  .card .inner { padding: 26px 28px 24px; }
+  .card h2 { font-size: 34px; margin-bottom: 8px; }
+  .card h2 mark { background: var(--ink-2); color: #fff; padding: 0 8px; border-radius: 4px; box-shadow: 3px 3px 0 var(--red); }
+  .card p.mute { margin: 0 0 20px; font-weight: 500; }
+  .card .btn.block { font-size: 16px; padding: 15px 20px; margin-top: 6px; letter-spacing: 0.06em; position: relative; overflow: hidden; }
+  .card .btn.block.ready { animation: rev 0.9s ease-in-out infinite; }
+  .card .btn.block.ready::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent); animation: shine 1.6s ease-in-out infinite; }
+  @keyframes rev { 50% { transform: translate(-1px, -1px) rotate(-0.6deg); } }
+  @keyframes shine { to { left: 130%; } }
+
+  /* meteran bensin */
+  .fuel { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; font-family: var(--f-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--ink); }
+  .fuel .tank { flex: 1; height: 14px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; overflow: hidden; }
+  .fuel .tank i { display: block; height: 100%; width: 0; transition: width 0.4s cubic-bezier(.2,.8,.2,1), background 0.3s;
+    background: repeating-linear-gradient(-45deg, var(--steel) 0 8px, #8494b5 8px 16px); }
+  .fuel.full .tank i { background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #e04050 8px 16px); }
+  .fuel b { min-width: 42px; text-align: right; }
+  .fuelmsg { display: block; font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); margin-bottom: 12px; }
+  .card .fine { font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); text-align: center; margin: 14px 0 0; }
+  .num { position: absolute; top: 24px; right: 22px; font-family: var(--f-head); font-size: 15px; color: var(--steel); letter-spacing: 0.08em; }
+  .staff { display: block; text-align: center; padding: 14px 18px; border-top: 2px dashed var(--line);
+    font-family: var(--f-mono); font-size: 12.5px; color: var(--mute); text-decoration: none; background: var(--paper); }
+  .staff b { color: var(--ink); }
   .staff:hover b { text-decoration: underline; }
-  .payinfo { background: var(--mint); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; }
-  .payinfo b { display: block; color: var(--primary-d); margin-bottom: 4px; }
-  .payinfo div { white-space: pre-line; color: var(--ink); font-weight: 600; }
-  .drop { position: relative; display: block; cursor: pointer; border: 2px dashed #a9d9d3; border-radius: 16px; background: #fbfefe; padding: 18px 16px; text-align: center; transition: border-color 0.15s, background 0.15s; margin: 0; font-weight: 500; }
-  .drop:hover, .drop:focus-within { border-color: var(--primary); background: var(--mint); }
+  /* kotak pembayaran */
+  .pay { border: 2.5px solid var(--ink); border-radius: 12px; overflow: hidden; margin: 6px 0 16px; box-shadow: 4px 4px 0 var(--red); }
+  .pay .price { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--ink-2); color: #fff; padding: 12px 16px; }
+  .pay .price span { font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--peach); }
+  .pay .price b { font-family: var(--f-head); font-size: 32px; line-height: 1; color: #fff; text-shadow: 2px 2px 0 var(--red); }
+  .pay .body { background: var(--mint); padding: 12px 16px 14px; font-size: 14px; }
+  .pay .rek { white-space: pre-line; color: var(--ink); font-weight: 600; margin-bottom: 10px; }
+  .pay .rek.empty { color: var(--mute); font-weight: 500; }
+  .pay ol { margin: 0 0 0 18px; padding: 0; font-size: 13px; color: var(--ink); }
+  .pay ol li { margin: 2px 0; }
+  .pay .copy { margin-bottom: 10px; }
+  .drop { position: relative; display: block; cursor: pointer; border: 2px dashed var(--steel); border-radius: 10px; background: #fbfaf7; padding: 18px 16px; text-align: center; transition: border-color 0.15s, background 0.15s; margin: 0; font-family: var(--f-body); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  .drop:hover, .drop:focus-within { border-color: var(--ink); background: var(--mint); }
   .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
   .drop-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--mute); }
-  .drop-empty svg { width: 30px; height: 30px; color: var(--primary); margin-bottom: 2px; }
+  .drop-empty svg { width: 30px; height: 30px; color: var(--ink-2); margin-bottom: 2px; }
   .drop-empty b { color: var(--ink); font-size: 14px; }
   .drop-empty small, .drop-done small { font-size: 12.5px; color: var(--mute); display: block; }
   .drop-done { display: flex; align-items: center; gap: 14px; text-align: left; }
-  .drop-done img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; flex: none; box-shadow: var(--shadow-sm); }
+  .drop-done img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; border: 2px solid var(--ink); }
   .drop-done b { display: block; color: var(--ink); font-size: 14px; word-break: break-all; }
   .closed { text-align: center; padding: 20px 0; }
   .closed .emoji { font-size: 52px; }
 
-  @media (max-width: 860px) {
+  /* pita "caution tape" */
+  .tapes { position: relative; height: 128px; overflow: hidden; border-top: 3px solid var(--ink); }
+  .tape { position: absolute; left: -5%; width: 110%; white-space: nowrap; overflow: hidden; border-block: 3px solid var(--ink);
+    font-family: var(--f-head); font-weight: 700; font-size: 22px; text-transform: uppercase; }
+  .tape .run { display: inline-flex; padding: 7px 0; animation: run 28s linear infinite; }
+  .tape span { padding: 0 16px; }
+  .tape span::after { content: "🏁"; margin-left: 32px; }
+  .t1 { top: 22px; background: var(--red); color: #fff; transform: rotate(-2.5deg); }
+  .t2 { top: 50px; background: var(--peach); color: var(--ink); transform: rotate(2deg); }
+  .t2 .run { animation-direction: reverse; }
+  footer { text-align: center; padding: 18px 16px 28px; font-family: var(--f-mono); font-size: 12px; color: var(--mute); }
+
+  /* intro lampu start F1 */
+  .intro { position: fixed; inset: 0; z-index: 100; background: radial-gradient(ellipse at 50% 40%, #26324c, #0d1020 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 20px; cursor: pointer;
+    transition: transform 0.6s cubic-bezier(.7,0,.3,1); }
+  .intro.go { transform: translateY(-105%); }
+  .lights { display: flex; gap: clamp(8px, 2vw, 16px); background: #050608; padding: 14px 18px; border-radius: 14px; border: 3px solid #2a2f40; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .pod { display: flex; flex-direction: column; gap: 10px; background: #12141c; padding: 8px; border-radius: 10px; }
+  .pod i { width: clamp(30px, 8vw, 58px); aspect-ratio: 1; border-radius: 50%; background: #2a1216; border: 3px solid #0a0a0a; transition: background 0.06s, box-shadow 0.06s; }
+  .pod.on i { background: #ff2338; box-shadow: 0 0 26px 6px rgba(255, 35, 56, 0.65); }
+  .intro p { font-family: var(--f-head); font-weight: 700; color: #fff; font-size: clamp(30px, 7vw, 64px); text-transform: uppercase; margin: 0; min-height: 1.1em; text-align: center; line-height: 1; }
+  .intro p.out { color: transparent; -webkit-text-fill-color: transparent; background: linear-gradient(180deg, #fff, #ffa489 55%, #b6192a); -webkit-background-clip: text; background-clip: text;
+    animation: pop 0.4s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(0.4); } }
+  .intro small { font-family: var(--f-mono); color: #687899; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* mobil ngebut setelah daftar */
+  .zoom { position: fixed; inset: 0; z-index: 110; pointer-events: none; overflow: hidden;
+    background: repeating-linear-gradient(0deg, transparent 0 34px, rgba(255,255,255,0.0) 34px 36px); animation: flash 1.05s ease-in forwards; }
+  .zoom svg { width: 100%; height: auto; display: block; }
+  .zoom span { position: absolute; top: 56%; left: 105%; width: clamp(260px, 42vw, 520px); line-height: 0; transform: translateY(-50%);
+    filter: drop-shadow(40px 0 0 rgba(255,164,137,0.45)) drop-shadow(80px 0 0 rgba(182,25,42,0.3)); animation: zoom 1s cubic-bezier(.55,0,.35,1) forwards; }
+  .zoom b { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--f-head); font-size: clamp(56px, 12vw, 130px); color: var(--red);
+    -webkit-text-stroke: 3px var(--ink); text-shadow: 6px 6px 0 var(--ink); animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); white-space: nowrap; }
+  @keyframes zoom { to { left: -70%; } }
+  @keyframes flash { 70% { background-color: transparent; } to { background-color: rgba(254,246,235,0.95); } }
+
+  /* jejak api di kursor */
+  .trail { position: fixed; z-index: 90; pointer-events: none; font-size: 16px; transform: translate(-50%, -50%); animation: puff 0.7s ease-out forwards; }
+  @keyframes puff { to { opacity: 0; transform: translate(-50%, -160%) scale(0.4) rotate(40deg); } }
+
+  @media (max-width: 900px) {
     .wrap { grid-template-columns: 1fr; min-height: 0; }
-    .hero { padding: 36px 22px 32px; }
-    .hero h1 { margin: 18px 0 18px; max-width: none; padding-right: 80px; }
-    .bigtooth { width: 220px; height: 220px; right: -60px; top: auto; bottom: -40px; transform: rotate(-8deg); }
-    .s1 { width: 82px; height: 82px; font-size: 12px; right: 16px; top: 22px; }
-    .s1 svg { width: 20px; height: 20px; }
-    .s2, .s3, .b3 { display: none; }
+    .hero { padding: 30px 20px 30px; border-right: 0; border-bottom: 3px solid var(--ink); }
+    .hero h1 { max-width: none; padding-right: 70px; }
+    .flag { width: 64px; height: 64px; right: 18px; top: 22px; }
+    .circuit { width: 200px; height: 140px; right: -60px; top: 34%; opacity: 0.5; }
+    .sp1 { right: 92px; top: 30px; width: 24px; } .sp2 { display: none; }
+    .sp3, .hero .keycap, .g2, .g3, .g4 { display: none; }
+    .g1 { top: auto; bottom: 236px; right: 14px; font-size: 11px; }
+    .countdown .digits div { min-width: 0; flex: 1; }
+    .countdown b { font-size: 24px; }
+    .tape { font-size: 18px; }
     .slots { min-width: 0; width: 100%; }
-    .formside { padding: 44px 18px 56px; }
-    .card { padding: 30px 20px 24px; }
+    .logos { height: 44px; }
+    .formside { padding: 36px 16px 52px; }
+    .card .inner { padding: 22px 18px 20px; }
+    .card h2 { font-size: 29px; }
   }
 </style>
 </head>
 <body>
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="lights"><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div></div>
+  <p id="introText"></p>
+  <small>Ketuk untuk skip</small>
+</div>
+<script>
+  // Intro cuma sekali per sesi, dan dilewati kalau pengguna minta animasi dikurangi
+  (function () {
+    let seen = false;
+    try { seen = sessionStorage.getItem("intro"); sessionStorage.setItem("intro", "1"); } catch (e) {}
+    if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) document.getElementById("intro").remove();
+  })();
+</script>
 <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+<div class="palette" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
 <div class="wrap">
   <aside class="hero">
+    <div class="speed" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div>
-      <span class="chip">🦷 Pendaftaran dibuka</span>
+      <span class="chip">🔥 Pendaftaran dibuka</span>
+      <p class="over">F1 × Fast &amp; Furious · Edisi 2026</p>
       <h1 id="eventName">&nbsp;</h1>
-      <p class="tag">Yuk, daftar sekarang dan ambil tiket QR-mu dalam hitungan detik.</p>
+      <p class="tag"><b>RADIANCE:</b> From rising flames to ultimate glory</p>
       <div class="info">
         <div id="eventDate"></div>
         <div id="eventPlace"></div>
+        <div id="eventPrice"></div>
+      </div>
+      <div class="countdown hidden" id="countdown">
+        <span>Lights out in</span>
+        <div class="digits" id="cdDigits">
+          <div><b id="cdD">00</b><small>hari</small></div>
+          <div><b id="cdH">00</b><small>jam</small></div>
+          <div><b id="cdM">00</b><small>menit</small></div>
+          <div><b id="cdS">00</b><small>detik</small></div>
+        </div>
       </div>
     </div>
-    <div class="slots">
-      <div class="top"><b id="remaining">–</b><span>kursi tersisa</span></div>
-      <div class="bar"><i id="fill"></i></div>
-      <small id="slotNote">Kuota terbatas, siapa cepat dia dapat.</small>
+    <div class="bottom">
+      <div class="slots">
+        <div class="top"><b id="remaining">–</b><span>kursi tersisa</span></div>
+        <div class="bar"><i id="fill"></i></div>
+        <small id="slotNote">Kuota terbatas, siapa cepat dia dapat.</small>
+      </div>
+      <div class="org"><span>Diselenggarakan oleh</span><img class="logos" src="/logos.png" alt="Logo penyelenggara"></div>
     </div>
-    <svg class="bigtooth" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-7 0-13 6-13 15 0 7 3 11 4 17 1 7 2 20 8 20 5 0 5-14 13-14s8 14 13 14c6 0 7-13 8-20 1-6 4-10 4-17 0-9-6-15-13-15-5 0-8 3-12 3S25 6 20 6z"/></svg>
-    <span class="bubble b1" aria-hidden="true"></span><span class="bubble b2" aria-hidden="true"></span><span class="bubble b3" aria-hidden="true"></span>
-    <div class="sticker s1" aria-hidden="true"><div><svg viewBox="0 0 64 64"><path d="M20 6c-7 0-13 6-13 15 0 7 3 11 4 17 1 7 2 20 8 20 5 0 5-14 13-14s8 14 13 14c6 0 7-13 8-20 1-6 4-10 4-17 0-9-6-15-13-15-5 0-8 3-12 3S25 6 20 6z"/></svg>Senyum<br>sehat!</div></div>
-    <div class="sticker s2" aria-hidden="true">Ajak temanmu 😁</div>
-    <div class="sticker s3" aria-hidden="true">✨ Tiket QR instan</div>
+
+    <svg class="flag" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><pattern id="ck" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#fff"/><rect width="4" height="4" fill="#171c2f"/><rect x="4" y="4" width="4" height="4" fill="#171c2f"/></pattern></defs>
+      <rect x="8" y="6" width="4" height="56" rx="2" fill="#fff"/>
+      <path d="M12 8c10-4 16 4 26 0s14-2 22 0v28c-8-2-12-4-22 0s-16-4-26 0z" fill="url(#ck)" stroke="#fff" stroke-width="2"/>
+    </svg>
+    <svg class="circuit" viewBox="0 0 280 200" fill="none" aria-hidden="true">
+      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#171c2f" stroke-width="6" stroke-linejoin="round"/>
+    </svg>
+    <svg class="spark sp1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
+    <svg class="spark sp2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
+    <svg class="spark sp3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
+    <span class="keycap" aria-hidden="true">F1</span>
+    <span class="gz g1" aria-hidden="true">no cap 🧢 seru parah</span>
+    <span class="gz g2" aria-hidden="true">main character energy ✨</span>
+    <span class="gz g3" aria-hidden="true">ga dateng = rugi 💀</span>
+    <span class="gz g4" aria-hidden="true">P1 vibes only 🏆</span>
   </aside>
 
   <main class="formside">
     <div class="card">
-      <div class="badge" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M20 6c-7 0-13 6-13 15 0 7 3 11 4 17 1 7 2 20 8 20 5 0 5-14 13-14s8 14 13 14c6 0 7-13 8-20 1-6 4-10 4-17 0-9-6-15-13-15-5 0-8 3-12 3S25 6 20 6z"/></svg></div>
-      <div id="formBox">
-        <h2>Daftar &amp; amankan <mark>tiketmu</mark></h2>
-        <p class="mute">Cuma butuh 1 menit. Tiket QR langsung jadi setelah daftar.</p>
-        <div id="err" class="alert err hidden"></div>
-        <form id="form" novalidate>
-          <div class="field"><label for="name">Nama lengkap</label><input id="name" type="text" autocomplete="name" placeholder="Nama sesuai KTM / KTP" required></div>
-          <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="kamu@email.com" required></div>
-          <div class="field"><label for="phone">Nomor HP / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx" required></div>
-          <div class="field"><label for="institution">Kampus / instansi <span class="opt">(opsional)</span></label><input id="institution" type="text" placeholder="Contoh: Universitas Indonesia"></div>
-          <div id="payBox" class="hidden">
-            <div class="payinfo"><b>💳 Pembayaran</b><div id="payInfo"></div></div>
-            <div class="field">
-              <label for="proof">Bukti transfer</label>
-              <label class="drop" id="drop" for="proof">
-                <input id="proof" type="file" accept="image/*">
-                <span class="drop-empty" id="dropEmpty">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-                  <b>Pilih foto / screenshot bukti transfer</b>
-                  <small>JPG atau PNG. Pastikan nominal & tanggal terlihat jelas.</small>
-                </span>
-                <span class="drop-done hidden" id="dropDone">
-                  <img id="proofPreview" alt="Pratinjau bukti transfer">
-                  <span><b id="proofName"></b><small>Ketuk untuk ganti gambar</small></span>
-                </span>
-              </label>
+      <div class="checker" aria-hidden="true"></div>
+      <span class="num" aria-hidden="true">#2026</span>
+      <div class="inner">
+        <div id="formBox">
+          <h2>Gas <mark>daftar!</mark> 🏎️</h2>
+          <p class="mute">1 menit doang, tiket QR langsung jadi. No ribet, no drama.</p>
+          <div id="err" class="alert err hidden"></div>
+          <form id="form" novalidate>
+            <div class="field"><label for="name">Nama lengkap</label><input id="name" type="text" autocomplete="name" placeholder="Nama lengkap sesuai KTM / KTP" required></div>
+            <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="kamu@email.com" required></div>
+            <div class="field"><label for="phone">Nomor HP / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx (WA aktif ya)" required></div>
+            <div class="field"><label for="institution">Kampus / instansi <span class="opt">(opsional)</span></label><input id="institution" type="text" placeholder="Contoh: Universitas Indonesia"></div>
+            <div id="payBox" class="hidden">
+              <div class="pay">
+                <div class="price"><span>💸 Harga tiket</span><b id="payPrice">Rp0</b></div>
+                <div class="body">
+                  <div class="rek" id="payInfo"></div>
+                  <button type="button" class="btn ghost small copy" id="payCopy">📋 Salin info rekening</button>
+                  <ol>
+                    <li>Transfer <b id="payPrice2">Rp0</b> ke rekening di atas</li>
+                    <li>Screenshot / foto bukti transfernya</li>
+                    <li>Upload di bawah, tiket langsung jadi 🎟️</li>
+                  </ol>
+                </div>
+              </div>
+              <div class="field">
+                <label for="proof">Upload bukti transfer 📸</label>
+                <label class="drop" id="drop" for="proof">
+                  <input id="proof" type="file" accept="image/*">
+                  <span class="drop-empty" id="dropEmpty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+                    <b>Pilih foto / screenshot bukti transfer</b>
+                    <small>JPG atau PNG. Pastikan nominal & tanggal terlihat jelas.</small>
+                  </span>
+                  <span class="drop-done hidden" id="dropDone">
+                    <img id="proofPreview" alt="Pratinjau bukti transfer">
+                    <span><b id="proofName"></b><small>Ketuk untuk ganti gambar</small></span>
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
-          <button class="btn gold block" id="submit" type="submit">Daftar &amp; ambil tiket →</button>
-        </form>
-        <p class="fine">Satu email hanya bisa dipakai untuk satu tiket.</p>
+            <div class="fuel" id="fuelBox"><span>⛽ Bensin</span><div class="tank"><i id="fuel"></i></div><b id="fuelPct">0%</b></div>
+            <small class="fuelmsg" id="fuelMsg">Tangki masih kosong, isi datanya dulu bestie</small>
+            <button class="btn gold block" id="submit" type="submit">Gas daftar 🏎️💨</button>
+          </form>
+          <p class="fine">Satu email = satu tiket. Jangan curang ya 👀</p>
+        </div>
+        <div id="closedBox" class="closed hidden">
+          <div class="emoji">😭</div>
+          <h2>Sold out!</h2>
+          <p class="mute">Kursinya udah full semua. Thank you for the hype, sampai ketemu di race berikutnya!</p>
+        </div>
       </div>
       <a class="staff" href="/panitia">Kamu panitia? <b>Masuk di sini →</b></a>
-      <div id="closedBox" class="closed hidden">
-        <div class="emoji">😭</div>
-        <h2>Yah, kuota penuh!</h2>
-        <p class="mute">Semua kursi sudah terisi. Makasih banget atas antusiasmenya, sampai ketemu di acara berikutnya!</p>
-      </div>
     </div>
   </main>
 </div>
+
+<div class="tapes" aria-hidden="true">
+  <div class="tape t1"><div class="run" id="tape1"></div></div>
+  <div class="tape t2"><div class="run" id="tape2"></div></div>
+</div>
+<footer>Dibuat dengan 🔥 oleh panitia · tiket kamu, aturan kamu, gas pol</footer>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const ICON = {
   date: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  price: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/><path d="M14 5v14" stroke-dasharray="2 2.5"/></svg>',
   place: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
 };
 function infoLine(el, icon, text) {
@@ -190,21 +361,124 @@ fetch("/api/event").then(r => r.json()).then(e => {
   $("remaining").textContent = e.remaining;
   const filled = e.quota ? Math.round(((e.quota - e.remaining) / e.quota) * 100) : 0;
   requestAnimationFrame(() => ($("fill").style.width = Math.max(filled, 2) + "%"));
-  $("slotNote").textContent = e.remaining <= 0 ? "Kuota sudah habis."
-    : filled >= 80 ? `${filled}% kursi sudah terisi, segera daftar!`
-    : "Kuota terbatas, siapa cepat dia dapat.";
+  $("slotNote").textContent = e.remaining <= 0 ? "Sold out 😭"
+    : filled >= 80 ? `🔥 ${filled}% udah keisi, buruan sebelum kehabisan!`
+    : "Kuota terbatas, first come first served 🏁";
+  if (e.start) countdown(Date.parse(e.start));
 
-  const items = [e.name, "Daftar sekarang", "Tiket QR instan", e.date, "Kuota terbatas", e.place].filter(Boolean);
-  const html = items.map(t => `<span><svg viewBox="0 0 64 64"><path d="M20 6c-7 0-13 6-13 15 0 7 3 11 4 17 1 7 2 20 8 20 5 0 5-14 13-14s8 14 13 14c6 0 7-13 8-20 1-6 4-10 4-17 0-9-6-15-13-15-5 0-8 3-12 3S25 6 20 6z"/></svg>${t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
-  $("marquee").innerHTML = html + html + html + html;
+  const items = [e.name, "F1", "Fast & Furious", "Y2K", "Retro", "Paper", e.date, "Tiket QR instan", e.place, "Kuota terbatas"].filter(Boolean);
+  const html = items.map(t => `<span>${t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
+$("marquee").innerHTML = html + html + html + html;
+  const tape = (words) => { const h = words.map(t => `<span>${t}</span>`).join(""); return h + h + h + h; };
+  $("tape1").innerHTML = tape(["Gas pol", "No cap", "Lights out", "Main character", "Full throttle"]);
+  $("tape2").innerHTML = tape(["Jangan sampai FOMO", "Slay di garis start", "Tiket QR instan", "See you at the grid"]);
 
   if (e.remaining <= 0) { $("formBox").classList.add("hidden"); $("closedBox").classList.remove("hidden"); }
   if (e.payment && e.payment.required) {
     payRequired = true;
-    $("payInfo").textContent = e.payment.info;
+    const price = "Rp" + Number(e.payment.price || 0).toLocaleString("id-ID");
+    $("payPrice").textContent = $("payPrice2").textContent = price;
+    if (e.payment.price) infoLine($("eventPrice"), ICON.price, "Tiket " + price);
+    if (e.payment.info) $("payInfo").textContent = e.payment.info;
+    else { $("payInfo").textContent = "Nomor rekening belum diisi panitia. Hubungi panitia dulu ya sebelum transfer."; $("payInfo").classList.add("empty"); $("payCopy").classList.add("hidden"); }
+    $("payCopy").onclick = async () => {
+      try { await navigator.clipboard.writeText(e.payment.info); $("payCopy").textContent = "✅ Tersalin!"; }
+      catch { prompt("Salin info rekening ini:", e.payment.info); }
+      setTimeout(() => ($("payCopy").textContent = "📋 Salin info rekening"), 2000);
+    };
     $("payBox").classList.remove("hidden");
   }
 });
+
+// ---------- Hitung mundur ----------
+function countdown(at) {
+  const pad = (n) => String(n).padStart(2, "0");
+  const tick = () => {
+    const ms = at - Date.now();
+    if (ms <= 0) {
+      $("cdDigits").innerHTML = '<div class="live">🏁 Race day! Lagi berlangsung</div>';
+      return clearInterval(t);
+    }
+    const s = Math.floor(ms / 1000);
+    $("cdD").textContent = pad(Math.floor(s / 86400));
+    $("cdH").textContent = pad(Math.floor(s / 3600) % 24);
+    $("cdM").textContent = pad(Math.floor(s / 60) % 60);
+    $("cdS").textContent = pad(s % 60);
+  };
+  const t = setInterval(tick, 1000);
+  tick();
+  $("countdown").classList.remove("hidden");
+}
+
+// ---------- Intro lampu start ----------
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+(function intro() {
+  const el = $("intro");
+  if (!el) return;
+  const pods = el.querySelectorAll(".pod"), step = 380;
+  let done = false;
+  const close = () => {
+    if (done) return; done = true;
+    el.classList.add("go");
+    setTimeout(() => el.remove(), 650);
+  };
+  pods.forEach((p, i) => setTimeout(() => p.classList.add("on"), 350 + i * step));
+  setTimeout(() => {
+    pods.forEach(p => p.classList.remove("on"));
+    $("introText").textContent = "Lights out! 🏁";
+    $("introText").classList.add("out");
+  }, 350 + pods.length * step + 450);
+  setTimeout(close, 350 + pods.length * step + 1400);
+  el.addEventListener("click", close);
+})();
+
+// ---------- Jejak api di kursor (desktop saja) ----------
+if (!calm && matchMedia("(pointer: fine)").matches) {
+  let last = 0;
+  const bits = ["🔥", "💨", "✨", "🏁"];
+  document.addEventListener("pointermove", (e) => {
+    const now = performance.now();
+    if (now - last < 55) return;
+    last = now;
+    const s = document.createElement("span");
+    s.className = "trail";
+    s.textContent = bits[(Math.random() * bits.length) | 0];
+    s.style.left = e.clientX + "px"; s.style.top = e.clientY + "px";
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 700);
+  });
+}
+
+// ---------- Meteran bensin: makin lengkap form, makin penuh ----------
+function fuel() {
+  const checks = [
+    $("name").value.trim().length >= 3,
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("email").value.trim()),
+    $("phone").value.replace(/\D/g, "").length >= 9,
+  ];
+  if (payRequired) checks.push(Boolean(proofData));
+  const n = checks.filter(Boolean).length, pct = Math.round((n / checks.length) * 100);
+  $("fuel").style.width = pct + "%";
+  $("fuelPct").textContent = pct + "%";
+  $("fuelBox").classList.toggle("full", pct === 100);
+  $("submit").classList.toggle("ready", pct === 100 && !calm);
+  $("fuelMsg").textContent = pct === 100 ? "FULL TANK! Siap gas 🏎️💨"
+    : pct >= 60 ? "Dikit lagi, hampir full 🔥"
+    : pct > 0 ? "Oke oke, lanjut isi..."
+    : "Tangki masih kosong, isi datanya dulu bestie";
+}
+["name", "email", "phone"].forEach(id => $(id).addEventListener("input", fuel));
+
+// Mobil ngebut lewat layar sebelum pindah ke halaman tiket
+const CAR = `<svg viewBox="0 0 240 84" aria-hidden="true"><rect x="192" y="8" width="38" height="9" rx="2" fill="#171c2f"/><rect x="204" y="14" width="8" height="30" fill="#171c2f"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#b6192a" stroke="#171c2f" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#fff" stroke-width="4"/><path d="M80 44 204 38" stroke="#ffa489" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#ffa489" stroke="#171c2f" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#171c2f" stroke-width="4" stroke-linecap="round"/><text x="160" y="36" font-family="Space Mono, monospace" font-weight="700" font-size="13" fill="#fff">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#171c2f"/><rect x="34" y="53" width="176" height="6" fill="#171c2f"/><circle cx="50" cy="58" r="17" fill="#171c2f"/><circle cx="50" cy="58" r="7" fill="#687899"/><circle cx="184" cy="56" r="20" fill="#171c2f"/><circle cx="184" cy="56" r="8" fill="#687899"/></svg>`;
+function zoom() {
+  if (calm) return Promise.resolve();
+  const z = document.createElement("div");
+  z.className = "zoom";
+  z.innerHTML = "<b>WUSHHH!</b><span>" + CAR + "</span>";
+  document.body.appendChild(z);
+  return new Promise(ok => setTimeout(ok, 1050));
+}
 
 // ---------- Bukti transfer ----------
 // Foto dari kamera HP bisa 5-10 MB, jadi dikecilkan dulu di browser (maks 1600px, JPEG) sebelum dikirim
@@ -233,6 +507,7 @@ $("proof").addEventListener("change", async () => {
     $("proofPreview").src = proofData;
     $("proofName").textContent = f.name;
     $("dropEmpty").classList.add("hidden"); $("dropDone").classList.remove("hidden");
+    fuel();
   } catch (e) {
     proofData = null; $("proof").value = "";
     $("err").textContent = e.message; $("err").classList.remove("hidden");
@@ -249,7 +524,7 @@ $("form").addEventListener("submit", async (ev) => {
     return;
   }
   $("submit").disabled = true;
-  $("submit").textContent = "Lagi diproses...";
+  $("submit").textContent = "Lagi ngegas...";
   try {
     const r = await fetch("/api/register", {
       method: "POST",
@@ -262,12 +537,13 @@ $("form").addEventListener("submit", async (ev) => {
     });
     const d = await r.json().catch(() => ({ error: r.status === 413 ? "Gambar bukti terlalu besar, coba screenshot ulang." : "Gagal terhubung ke server, coba lagi." }));
     if (!r.ok) throw new Error(d.error || "Gagal mendaftar.");
+    await zoom();
     location.href = "/tiket#" + d.code;
   } catch (e) {
     $("err").textContent = e.message;
     $("err").classList.remove("hidden");
     $("submit").disabled = false;
-    $("submit").textContent = "Daftar & ambil tiket →";
+    $("submit").textContent = "Gas daftar 🏎️💨";
   }
 });
 </script>

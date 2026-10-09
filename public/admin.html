@@ -6,63 +6,81 @@
 <title>Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
   /* Login */
-  .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.16) 0 140px, transparent 141px), linear-gradient(150deg, #19c3b1 0%, #12a6a6 45%, #2b8fd6 100%); }
-  .login .box { background: #fff; box-shadow: var(--shadow); border-radius: 26px; padding: 32px 28px; width: 100%; max-width: 380px; }
-  .login h1 { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+  .login { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 24px; background: radial-gradient(ellipse at 100% 0%, rgba(104,120,153,0.5), transparent 50%), linear-gradient(165deg, #26324c, #171c2f 70%); }
+  .login .logos { align-self: center; }
+  .login .box { background: #fff; border: 2.5px solid var(--ink); box-shadow: 7px 7px 0 var(--red); border-radius: 14px; padding: 0 26px 26px; width: 100%; max-width: 390px; overflow: hidden; }
+  .login .box .checker { height: 14px; margin: 0 -26px 24px; border-bottom: 2.5px solid var(--ink); }
+  .login h1 { font-size: 32px; margin-bottom: 4px; }
   .login p { margin: 0 0 22px; }
-  .login .back { display: block; text-align: center; margin-top: 18px; font-size: 13.5px; font-weight: 700; color: var(--mute); text-decoration: none; }
+  .login .back { display: block; text-align: center; margin-top: 18px; font-family: var(--f-mono); font-size: 12.5px; font-weight: 700; color: var(--mute); text-decoration: none; }
   .login .back:hover { color: var(--ink); text-decoration: underline; }
 
   /* Dashboard */
-  header.top { background: linear-gradient(120deg, #12a6a6, #2b8fd6); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  header.top h1 { color: #fff; font-size: 20px; font-weight: 900; flex: 1; min-width: 180px; }
-  header.top .who { color: #e6fbf8; font-size: 13px; }
-  header.top .btn.ghost { color: var(--ink); border-color: transparent; }
-  header.top .btn.small { box-shadow: none; }
+  header.top { background: linear-gradient(165deg, #26324c, #171c2f); border-bottom: 3px solid var(--ink); color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header.top h1 { color: #fff; font-size: 24px; flex: 1; min-width: 180px; text-shadow: 2px 2px 0 var(--red); }
+  header.top .who { color: var(--peach); font-family: var(--f-mono); font-size: 12.5px; }
+  header.top .btn.ghost { color: var(--ink); }
+  header.top .btn.small { box-shadow: 2px 2px 0 #0d1020; }
   .container { max-width: 1180px; margin: 0 auto; padding: 24px; }
 
   .stats { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
-  .stat { background: #fff; box-shadow: var(--shadow); border-radius: var(--radius); padding: 18px 20px; }
-  .stat:nth-child(2) { background: var(--mint); }
-  .stat:nth-child(3) { background: var(--sky); }
-  .stat .n { font-family: "Nunito", sans-serif; font-size: 36px; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat { background: #fff; border: 2.5px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); border-radius: 12px; padding: 16px 20px; }
+  .stat:nth-child(2) { background: var(--mint); box-shadow: 5px 5px 0 var(--steel); }
+  .stat:nth-child(3) { background: var(--sky); box-shadow: 5px 5px 0 var(--red); }
+  .stat .n { font-family: var(--f-head); font-size: 40px; font-weight: 700; color: var(--ink); line-height: 1.1; }
   .stat .n small { font-size: 16px; font-weight: 500; color: var(--mute); }
-  .stat .l { font-size: 13px; color: var(--mute); font-weight: 700; }
-  .bar { height: 10px; background: var(--mint); border-radius: 99px; margin-top: 12px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--blue)); border-radius: 99px; transition: width 0.4s; }
+  .stat .l { font-family: var(--f-mono); font-size: 12px; color: var(--mute); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .bar { height: 12px; background: #fff; border: 2px solid var(--ink); border-radius: 4px; margin-top: 12px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #d43a48 8px 16px); transition: width 0.4s; }
   .stat.in .n { color: var(--ok); }
+  .stats.paid { grid-template-columns: 1.3fr 1fr 1fr 1.5fr; }
+  .stat.money { background: var(--ink-2); color: #fff; box-shadow: 5px 5px 0 var(--red); }
+  .stat.money .n { color: #fff; font-size: 32px; }
+  .stat.money .l { color: var(--peach); }
+  .stat.money .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .stat.money .chips span { font-family: var(--f-mono); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; background: rgba(255,255,255,0.12); }
+  .stat.money .chips b { color: #fff; }
+  .seg button .badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+  .pill.wait { background: #fff1d6; color: #9a5b00; }
+  .pill.ok { background: #e1f3ea; color: var(--ok); }
+  .pill.bad { background: #fde2e2; color: var(--red); }
+  td .pills { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .btn.small.proofb.wait { background: #fff1d6; }
+  .pv-status { padding: 10px 18px; border-bottom: 1px solid var(--line); font-size: 13.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sheet-acts .btn.okb { background: var(--ok); color: #fff; }
+  .sheet-acts .btn.badb { background: #fff; color: var(--red); }
 
   .tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
   .tools input { flex: 1; min-width: 200px; }
   .tools select { width: auto; }
-  .seg { display: inline-flex; background: #fff; border: 1.5px solid var(--line); border-radius: 99px; padding: 3px; }
-  .seg button { border: 0; background: transparent; padding: 7px 13px; font-size: 14px; border-radius: 99px; cursor: pointer; color: var(--mute); font-weight: 700; }
-  .seg button.on { background: var(--primary); color: #fff; }
+  .seg { display: inline-flex; background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 3px; box-shadow: 2px 2px 0 var(--ink); }
+  .seg button { border: 0; background: transparent; padding: 6px 12px; font-family: var(--f-mono); font-size: 12.5px; border-radius: 7px; cursor: pointer; color: var(--mute); font-weight: 700; }
+  .seg button.on { background: var(--ink-2); color: #fff; }
 
-  .tablewrap { background: #fff; box-shadow: var(--shadow); border-radius: var(--radius); overflow-x: auto; }
+  .tablewrap { background: #fff; border: 2.5px solid var(--ink); box-shadow: 6px 6px 0 var(--ink-2); border-radius: 12px; overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font-weight: 800; color: var(--primary-d); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; background: var(--mint); padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  td { padding: 12px 16px; border-bottom: 1px solid #e7f1f3; vertical-align: middle; }
-  td .code { font-family: "Nunito", sans-serif; font-size: 16px; letter-spacing: 2px; }
+  th { text-align: left; font-family: var(--f-mono); font-weight: 700; color: #fff; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; background: var(--ink-2); padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1.5px dashed var(--line); vertical-align: middle; }
+  td .code { font-family: var(--f-mono); font-size: 15px; letter-spacing: 3px; }
   td .nm { font-weight: 700; color: var(--ink); }
   td .sm { font-size: 12.5px; color: var(--mute); }
-  .pill { display: inline-block; padding: 4px 11px; border-radius: 99px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .pill.yes { background: var(--mint); color: var(--primary-d); }
-  .pill.no { background: #eef3f5; color: var(--mute); }
+  .pill { display: inline-block; padding: 3px 10px; border: 2px solid currentColor; border-radius: 6px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill.yes { background: #e1f3ea; color: var(--ok); }
+  .pill.no { background: #f3efe8; color: var(--mute); }
   .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-  .btn.small.proofb { border-color: #a9d9d3; color: var(--primary-d); background: var(--mint); }
-  .modal { position: fixed; inset: 0; z-index: 60; background: rgba(13, 59, 79, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .sheet { background: #fff; border-radius: 24px; width: 100%; max-width: 520px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
+  .btn.small.proofb { color: var(--ink-2); background: var(--mint); }
+  .modal { position: fixed; inset: 0; z-index: 60; background: rgba(23, 28, 47, 0.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .sheet { background: #fff; border: 2.5px solid var(--ink); border-radius: 14px; width: 100%; max-width: 520px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
   .sheet-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
   .sheet-head b { color: var(--ink); font-size: 16px; }
-  .pv-img { flex: 1; overflow: auto; background: #eef5f7; display: flex; align-items: flex-start; justify-content: center; min-height: 200px; position: relative; }
+  .pv-img { flex: 1; overflow: auto; background: var(--paper-2); display: flex; align-items: flex-start; justify-content: center; min-height: 200px; position: relative; }
   .pv-img img { max-width: 100%; display: block; }
   .pv-img .sm { position: absolute; top: 50%; left: 0; right: 0; text-align: center; }
-  .sheet-acts { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .sheet-acts { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
   .sheet-acts .btn { flex: 1; }
   .empty { padding: 40px; text-align: center; color: var(--mute); }
   .danger { color: var(--bad) !important; }
@@ -72,11 +90,11 @@
     header.top { padding: 12px 16px; gap: 10px; }
     header.top h1 { order: 3; flex-basis: 100%; font-size: 18px; }
     header.top .who { flex: 1; }
-    .stats { grid-template-columns: 1fr 1fr; }
-    .stats .stat:first-child { grid-column: 1 / -1; }
+    .stats, .stats.paid { grid-template-columns: 1fr 1fr; }
+    .stats .stat:first-child, .stats .stat.money { grid-column: 1 / -1; }
     thead { display: none; }
     table, tbody, tr, td { display: block; width: 100%; }
-    tr { padding: 12px 16px; border-bottom: 1px solid #e7f1f3; }
+    tr { padding: 12px 16px; border-bottom: 1.5px dashed var(--line); }
     td { padding: 2px 0; border: 0; }
     td.hide-m { display: none; }
     .acts { justify-content: flex-start; margin-top: 8px; }
@@ -87,6 +105,7 @@
 
 <section id="loginView" class="login hidden">
   <div class="box">
+    <div class="checker" aria-hidden="true"></div>
     <h1>Masuk panitia</h1>
     <p class="mute">Untuk admin dan petugas scanner.</p>
     <div id="loginErr" class="alert err hidden"></div>
@@ -97,6 +116,7 @@
     </form>
     <a class="back" href="/">← Kembali ke halaman pendaftaran</a>
   </div>
+  <img class="logos" src="/logos.png" alt="Logo penyelenggara">
 </section>
 
 <section id="dashView" class="hidden">
@@ -112,12 +132,16 @@
       <div class="stat"><div class="n"><span id="sTotal">0</span> <small>/ <span id="sQuota">0</span></small></div><div class="l">Peserta terdaftar</div><div class="bar"><i id="sBar" style="width:0"></i></div></div>
       <div class="stat in"><div class="n" id="sIn">0</div><div class="l">Sudah masuk</div></div>
       <div class="stat"><div class="n" id="sOut">0</div><div class="l">Belum datang</div></div>
+      <div class="stat money hidden" id="sMoney">
+        <div class="n" id="sRevenue">Rp0</div><div class="l">Pemasukan (sudah lunas)</div>
+        <div class="chips"><span>✅ Lunas <b id="sPaid">0</b></span><span>⏳ Menunggu <b id="sPending">0</b></span><span>❌ Ditolak <b id="sRejected">0</b></span></div>
+      </div>
     </div>
 
     <div class="tools">
       <input type="search" id="search" placeholder="Cari nama, email, HP, kode">
       <div class="seg" id="filter">
-        <button data-f="all" class="on">Semua</button><button data-f="in">Sudah masuk</button><button data-f="out">Belum</button>
+        <button data-f="all" class="on">Semua</button><button data-f="in">Sudah masuk</button><button data-f="out">Belum</button><button data-f="pay" id="fPay" class="hidden">Cek bayar<span class="badge" id="fPayN">0</span></button>
       </div>
       <a class="btn ghost small" href="/api/export.xlsx">Export Excel</a>
       <button class="btn ghost small danger" id="resetAll">Reset semua status</button>
@@ -139,8 +163,12 @@
       <div><b id="pvName"></b><div class="sm" id="pvInfo"></div></div>
       <button class="btn ghost small" id="pvClose" aria-label="Tutup">✕</button>
     </div>
+    <div class="pv-status" id="pvStatus"></div>
     <div class="pv-img"><img id="pvImg" alt="Bukti transfer"><div id="pvLoading" class="sm">Memuat gambar...</div></div>
     <div class="sheet-acts">
+      <button class="btn okb" id="pvPaid">✅ Terima (lunas)</button>
+      <button class="btn badb" id="pvReject">❌ Tolak</button>
+      <button class="btn ghost hidden" id="pvUndo">↩️ Jadikan menunggu</button>
       <a class="btn ghost" id="pvOpen" target="_blank" rel="noopener">Buka ukuran penuh</a>
     </div>
   </div>
@@ -149,7 +177,7 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-let all = [], filter = "all", timer;
+let all = [], filter = "all", timer, lastPrice = 0;
 
 async function api(url, opts = {}) {
   const r = await fetch(url, { headers: { "Content-Type": "application/json" }, ...opts });
@@ -173,9 +201,22 @@ async function showDash(user) {
 async function load() {
   const d = await api("/api/participants");
   all = d.rows;
+  lastPrice = (d.payment && d.payment.price) || 0;
   $("sTotal").textContent = d.total; $("sQuota").textContent = d.quota;
   $("sIn").textContent = d.scanned; $("sOut").textContent = d.total - d.scanned;
   $("sBar").style.width = Math.min(100, (d.total / d.quota) * 100) + "%";
+  const pay = d.payment || {};
+  const showPay = pay.required || all.some(p => p.payStatus);
+  $("sMoney").classList.toggle("hidden", !showPay);
+  document.querySelector(".stats").classList.toggle("paid", showPay);
+  $("fPay").classList.toggle("hidden", !showPay);
+  if (showPay) {
+    $("sRevenue").textContent = rupiah(pay.revenue);
+    $("sPaid").textContent = pay.paid; $("sPending").textContent = pay.pending; $("sRejected").textContent = pay.rejected;
+    $("fPayN").textContent = pay.pending;
+    $("fPayN").classList.toggle("hidden", !pay.pending);
+  }
+  if (pvId) showPayStatus();
   render();
 }
 
@@ -184,21 +225,22 @@ function render() {
   const list = all.filter(p => {
     if (filter === "in" && !p.scannedAt) return false;
     if (filter === "out" && p.scannedAt) return false;
+    if (filter === "pay" && p.payStatus !== "pending") return false;
     if (!s) return true;
     return [p.name, p.email, p.phone, p.institution, p.short].join(" ").toLowerCase().includes(s);
   });
   $("empty").classList.toggle("hidden", list.length > 0);
-  $("empty").textContent = all.length ? "Tidak ada yang cocok." : "Belum ada peserta.";
+  $("empty").textContent = !all.length ? "Belum ada peserta." : filter === "pay" ? "Semua bukti transfer udah dicek 🎉" : "Tidak ada yang cocok.";
   $("rows").innerHTML = list.map(p => `
     <tr>
       <td><div class="nm">${esc(p.name)}</div><div class="sm">${esc(p.institution || "")}</div></td>
       <td><div>${esc(p.email)}</div><div class="sm">${esc(p.phone)}</div></td>
       <td><b class="code">${esc(p.short)}</b><div class="sm">daftar ${esc(p.createdAt)}</div></td>
-      <td>${p.scannedAt
+      <td><div class="pills">${payPill(p)}${p.scannedAt
         ? `<span class="pill yes">Sudah masuk</span><div class="sm">${esc(p.scannedAt)} · ${esc(p.scannedBy || "")}</div>`
-        : `<span class="pill no">Belum discan</span>`}</td>
+        : `<span class="pill no">Belum discan</span>`}</div></td>
       <td><div class="acts">
-        ${p.hasProof ? `<button class="btn ghost small proofb" data-act="proof" data-id="${p.id}">Lihat bukti</button>` : ""}
+        ${p.hasProof ? `<button class="btn ghost small proofb ${p.payStatus === "pending" ? "wait" : ""}" data-act="proof" data-id="${p.id}">${p.payStatus === "pending" ? "Cek bukti" : "Lihat bukti"}</button>` : ""}
         ${p.scannedAt
           ? `<button class="btn ghost small" data-act="reset" data-id="${p.id}">Jadikan belum</button>`
           : `<button class="btn ghost small" data-act="in" data-id="${p.id}">Tandai masuk</button>`}
@@ -208,18 +250,57 @@ function render() {
     </tr>`).join("");
 }
 
-// ---------- Lihat bukti transfer ----------
+// ---------- Pembayaran ----------
+const rupiah = (n) => "Rp" + Number(n || 0).toLocaleString("id-ID");
+const PAY = { paid: ["ok", "✅ Lunas"], pending: ["wait", "⏳ Menunggu cek"], rejected: ["bad", "❌ Bayar ditolak"] };
+function payPill(p) {
+  const s = PAY[p.payStatus];
+  return s ? `<span class="pill ${s[0]}">${s[1]}</span>` : "";
+}
+
+// ---------- Lihat & cek bukti transfer ----------
 let pvId = null;
+function showPayStatus() {
+  const p = all.find(x => x.id === pvId); if (!p) return;
+  const s = PAY[p.payStatus];
+  $("pvStatus").innerHTML = s
+    ? `${payPill(p)}${p.payBy ? `<span class="sm">oleh ${esc(p.payBy)} · ${esc(p.payAt || "")}</span>` : `<span class="sm">Cocokkan nominal ${rupiah(lastPrice)} & tanggal di bukti.</span>`}`
+    : `<span class="sm">Peserta ini tidak punya status pembayaran.</span>`;
+  $("pvPaid").classList.toggle("hidden", p.payStatus === "paid");
+  $("pvReject").classList.toggle("hidden", p.payStatus === "rejected");
+  $("pvUndo").classList.toggle("hidden", !p.payStatus || p.payStatus === "pending");
+}
+async function setPay(status) {
+  if (!pvId) return;
+  const p = all.find(x => x.id === pvId);
+  if (status === "rejected" && !confirm(`Tolak pembayaran ${p ? p.name : ""}? Tiketnya bakal ditolak di scanner sampai statusnya diubah lagi.`)) return;
+  [$("pvPaid"), $("pvReject"), $("pvUndo")].forEach(b => (b.disabled = true));
+  try {
+    await api(`/api/participants/${pvId}/payment`, { method: "POST", body: JSON.stringify({ status }) });
+    await load();
+    if (status === "paid" && filter === "pay") {
+      // langsung lanjut ke bukti berikutnya yang belum dicek
+      const next = all.find(x => x.payStatus === "pending" && x.hasProof);
+      next ? openProof(next.id) : closeProof();
+    }
+  } finally {
+    [$("pvPaid"), $("pvReject"), $("pvUndo")].forEach(b => (b.disabled = false));
+  }
+}
+$("pvPaid").addEventListener("click", () => setPay("paid"));
+$("pvReject").addEventListener("click", () => setPay("rejected"));
+$("pvUndo").addEventListener("click", () => setPay("pending"));
 function openProof(id) {
   const p = all.find(x => x.id === id); if (!p) return;
   pvId = id;
   $("pvName").textContent = p.name;
-  $("pvInfo").textContent = `Kode ${p.short} · ${p.phone}`;
+  $("pvInfo").textContent = `Kode ${p.short} · ${p.phone} · daftar ${p.createdAt}`;
   $("pvImg").removeAttribute("src"); $("pvLoading").textContent = "Memuat gambar..."; $("pvLoading").classList.remove("hidden");
   $("pvImg").onload = () => $("pvLoading").classList.add("hidden");
   $("pvImg").onerror = () => ($("pvLoading").textContent = "Gambar tidak bisa dimuat.");
   $("pvImg").src = $("pvOpen").href = "/api/proof/" + encodeURIComponent(id);
   $("proofView").classList.remove("hidden");
+  showPayStatus();
 }
 function closeProof() { $("proofView").classList.add("hidden"); pvId = null; }
 $("pvClose").addEventListener("click", closeProof);
