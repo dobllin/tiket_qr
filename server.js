@@ -101,7 +101,7 @@ async function initDb() {
   `);
   // Status pembayaran: pending (bukti belum dicek), paid (lunas), rejected (ditolak). Kosong = tidak perlu bayar.
   const cols = (await all("PRAGMA table_info(participants)")).map((c) => c.name);
-  for (const c of ["pay_status", "pay_by", "pay_at"]) {
+  for (const c of ["pay_status", "pay_by", "pay_at", "angkatan"]) {
     if (!cols.includes(c)) await db.execute(`ALTER TABLE participants ADD COLUMN ${c} TEXT`);
   }
   // Peserta lama yang sudah upload bukti tapi belum punya status -> menunggu dicek
@@ -156,9 +156,9 @@ async function registerTx(p, proof) {
     try {
       // Peserta & bukti transfer disimpan bersamaan: dua-duanya masuk, atau tidak sama sekali
       const steps = [{
-        sql: `INSERT INTO participants (id, short_code, name, email, phone, institution, created_at, pay_status)
-              SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM participants) < ?`,
-        args: [p.id, p.short_code, p.name, p.email, p.phone, p.institution, p.created_at, proof ? "pending" : null, QUOTA],
+        sql: `INSERT INTO participants (id, short_code, name, email, phone, institution, angkatan, created_at, pay_status)
+              SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM participants) < ?`,
+        args: [p.id, p.short_code, p.name, p.email, p.phone, p.institution, p.angkatan, p.created_at, proof ? "pending" : null, QUOTA],
       }];
       if (proof) steps.push({
         sql: "INSERT INTO proofs (participant_id, mime, data, created_at) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM participants WHERE id = ?)",
@@ -237,11 +237,14 @@ app.post("/api/register", async (req, res) => {
     email: clean(req.body.email, 120).toLowerCase(),
     phone: clean(req.body.phone, 20).replace(/[^\d+]/g, ""),
     institution: clean(req.body.institution, 100) || null,
+    angkatan: clean(req.body.angkatan, 20) || null,
     created_at: now(),
   };
   if (p.name.length < 2) return res.status(400).json({ error: "Nama wajib diisi." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) return res.status(400).json({ error: "Format email tidak valid." });
   if (p.phone.length < 9) return res.status(400).json({ error: "Nomor HP tidak valid." });
+  if (!p.institution || p.institution.length < 2) return res.status(400).json({ error: "Institusi wajib diisi." });
+  if (!p.angkatan) return res.status(400).json({ error: "Angkatan wajib diisi." });
 
   let proof = null;
   if (PAYMENT_REQUIRED) {
@@ -277,6 +280,7 @@ app.get("/api/ticket", async (req, res) => {
   res.json({
     name: p.name,
     institution: p.institution,
+    angkatan: p.angkatan,
     ticketNo: p.short_code,
     payStatus: p.pay_status,
     event: { name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE },
@@ -347,7 +351,7 @@ app.post("/api/scan", auth, async (req, res) => {
   res.json({
     status: "ok",
     message: "Silakan masuk.",
-    participant: { name: row.name, institution: row.institution, scannedAt: row.scanned_at, payStatus: row.pay_status },
+    participant: { name: row.name, institution: row.institution, angkatan: row.angkatan, scannedAt: row.scanned_at, payStatus: row.pay_status },
   });
 });
 
@@ -361,6 +365,7 @@ app.get("/api/participants", auth, async (req, res) => {
     email: p.email,
     phone: p.phone,
     institution: p.institution,
+    angkatan: p.angkatan,
     createdAt: p.created_at,
     scannedAt: p.scanned_at,
     scannedBy: p.scanned_by,
@@ -433,7 +438,8 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
     { header: "Nama", key: "name", width: 28 },
     { header: "Email", key: "email", width: 30 },
     { header: "No. HP", key: "phone", width: 16 },
-    { header: "Instansi / Kampus", key: "institution", width: 26 },
+    { header: "Institusi", key: "institution", width: 26 },
+    { header: "Angkatan", key: "angkatan", width: 12 },
     { header: "Waktu Daftar", key: "created", width: 20 },
     { header: "Nominal", key: "price", width: 14 },
     { header: "Status Pembayaran", key: "pay", width: 18 },
@@ -452,6 +458,7 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
       email: p.email,
       phone: p.phone,
       institution: p.institution || "",
+      angkatan: p.angkatan || "",
       created: p.created_at,
       price: p.pay_status ? TICKET_PRICE : "",
       pay: PAY_LABEL[p.pay_status] || "-",
@@ -467,7 +474,7 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
     if (color) row.getCell("pay").fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
   });
   ws.getColumn("price").numFmt = '"Rp"#,##0';
-  head(ws, "O");
+  head(ws, "P");
 
   // Ringkasan pembayaran
   const sum = wb.addWorksheet("Ringkasan");

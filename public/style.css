@@ -134,7 +134,7 @@ input:focus, select:focus { box-shadow: 3px 3px 0 var(--steel); }
 .palette i:nth-child(6) { background: #b6192a; }
 .palette i:nth-child(7) { background: #541b2e; }
 /* Deretan logo penyelenggara */
-.logos { display: block; height: 52px; width: auto; max-width: 100%; align-self: flex-start; object-fit: contain; }
+.logos { display: block; height: 64px; width: auto; max-width: 100%; align-self: flex-start; object-fit: contain; }
 /* Tombol keyboard "F1" */
 .keycap {
   display: inline-flex; align-items: center; justify-content: center;

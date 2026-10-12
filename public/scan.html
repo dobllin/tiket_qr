@@ -117,7 +117,7 @@ function show(d) {
   $("rName").textContent = p.name || "";
   $("rInfo").textContent =
     d.status === "used" ? `Masuk pada ${p.scannedAt}${p.scannedBy ? " oleh " + p.scannedBy : ""}`
-    : d.status === "ok" ? [p.institution, "Silakan masuk, racer!", p.payStatus === "pending" ? "⚠️ Bukti transfer belum dicek panitia" : ""].filter(Boolean).join(" · ")
+    : d.status === "ok" ? [p.institution, p.angkatan && "Angkatan " + p.angkatan, "Silakan masuk, racer!", p.payStatus === "pending" ? "⚠️ Bukti transfer belum dicek panitia" : ""].filter(Boolean).join(" · ")
     : d.message;
   beep(d.status === "ok");
   if (d.status === "ok") $("n").textContent = ++count;

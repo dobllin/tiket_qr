@@ -227,13 +227,13 @@ function render() {
     if (filter === "out" && p.scannedAt) return false;
     if (filter === "pay" && p.payStatus !== "pending") return false;
     if (!s) return true;
-    return [p.name, p.email, p.phone, p.institution, p.short].join(" ").toLowerCase().includes(s);
+    return [p.name, p.email, p.phone, p.institution, p.angkatan, p.short].join(" ").toLowerCase().includes(s);
   });
   $("empty").classList.toggle("hidden", list.length > 0);
   $("empty").textContent = !all.length ? "Belum ada peserta." : filter === "pay" ? "Semua bukti transfer udah dicek 🎉" : "Tidak ada yang cocok.";
   $("rows").innerHTML = list.map(p => `
     <tr>
-      <td><div class="nm">${esc(p.name)}</div><div class="sm">${esc(p.institution || "")}</div></td>
+      <td><div class="nm">${esc(p.name)}</div><div class="sm">${esc([p.institution, p.angkatan && "Angkatan " + p.angkatan].filter(Boolean).join(" · "))}</div></td>
       <td><div>${esc(p.email)}</div><div class="sm">${esc(p.phone)}</div></td>
       <td><b class="code">${esc(p.short)}</b><div class="sm">daftar ${esc(p.createdAt)}</div></td>
       <td><div class="pills">${payPill(p)}${p.scannedAt

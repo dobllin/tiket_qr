@@ -82,7 +82,7 @@
     <div class="main">
       <div class="event" id="tEvent"></div>
       <p class="k">Nama peserta</p><p class="v big" id="tName"></p>
-      <div id="tInstBox"><p class="k">Kampus / instansi</p><p class="v" id="tInst"></p></div>
+      <div id="tInstBox"><p class="k">Institusi / angkatan</p><p class="v" id="tInst"></p></div>
       <p class="k">Tanggal</p><p class="v" id="tDate"></p>
       <p class="k">Lokasi</p><p class="v" id="tPlace"></p>
     </div>
@@ -118,7 +118,8 @@ async function load() {
   $("chip").classList.remove("hidden");
   $("tEvent").textContent = data.event.name;
   $("tName").textContent = data.name;
-  if (data.institution) $("tInst").textContent = data.institution; else $("tInstBox").classList.add("hidden");
+  const inst = [data.institution, data.angkatan && "Angkatan " + data.angkatan].filter(Boolean).join(" · ");
+  if (inst) $("tInst").textContent = inst; else $("tInstBox").classList.add("hidden");
   $("tDate").textContent = data.event.date || "-";
   $("tPlace").textContent = data.event.place || "-";
   $("tQr").src = data.qr;
@@ -243,7 +244,8 @@ $("download").addEventListener("click", async () => {
     y = wrap(ctx, big ? v.toUpperCase() : v, x, y, maxW, big ? 66 : 42) + 24;
   };
   kv("Nama peserta", data.name, true);
-  if (data.institution) kv("Kampus / instansi", data.institution);
+  const inst = [data.institution, data.angkatan && "Angkatan " + data.angkatan].filter(Boolean).join(" · ");
+  if (inst) kv("Institusi / angkatan", inst);
   kv("Tanggal", data.event.date || "-");
   kv("Lokasi", data.event.place || "-");
 
