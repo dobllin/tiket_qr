@@ -21,7 +21,7 @@
     background-image: radial-gradient(currentColor 1.8px, transparent 2px); background-size: 11px 11px; border-radius: 50%;
     -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
   .hero > * { position: relative; z-index: 1; }
-  .hero > svg, .hero > .sticker, .hero > .eclipse { z-index: 0; }
+  .hero > svg, .hero > .sticker, .hero > .keycap, .hero > .road { z-index: 0; }
   .hero .chip { background: var(--peach); border-color: var(--peach); color: var(--ink); }
   .hero .over { font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.18em; color: var(--peach); margin: 26px 0 8px; text-transform: uppercase; }
   /* judul chrome ala Y2K */
@@ -63,7 +63,7 @@
     transform: rotate(var(--r)); animation: wob 3.4s ease-in-out infinite; }
   @keyframes wob { 50% { transform: rotate(calc(var(--r) * -0.6)) scale(1.07); } }
   .g1 { --r: 7deg; right: 22px; top: 300px; background: var(--peach); color: var(--ink); }
-  .g2 { --r: -6deg; right: 40px; top: 610px; background: #fff; color: var(--ink); animation-delay: 0.7s; }
+  .g2 { --r: -6deg; right: 40px; top: 676px; background: #fff; color: var(--ink); animation-delay: 0.7s; }
   .g3 { --r: 5deg; right: 28px; bottom: 150px; background: var(--red); color: #fff; animation-delay: 1.3s; }
   .g4 { --r: -8deg; right: 36px; bottom: 40px; background: #e6d3a1; color: var(--ink); animation-delay: 2s; }
 
@@ -82,16 +82,25 @@
   /* Ornamen */
   .flag { position: absolute; right: 44px; top: 34px; width: 96px; height: 96px; transform: rotate(8deg); animation: wave 3.2s ease-in-out infinite; transform-origin: 10% 100%; }
   @keyframes wave { 50% { transform: rotate(2deg); } }
-  .circuit { position: absolute; right: -30px; top: 42%; width: 280px; height: 200px; opacity: 0.9; pointer-events: none; }
+  .circuit { position: absolute; right: 18px; top: 430px; width: 310px; height: 227px; pointer-events: none; filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.35)); }
   .spark { position: absolute; fill: #fff; pointer-events: none; animation: twinkle 2.6s ease-in-out infinite; }
   .sp1 { width: 34px; right: 170px; top: 60px; }
   .sp2 { width: 18px; right: 150px; top: 112px; animation-delay: 0.8s; fill: var(--peach); }
   .sp3 { width: 26px; right: 60px; bottom: 210px; animation-delay: 1.4s; }
   @keyframes twinkle { 50% { transform: scale(0.7) rotate(20deg); opacity: 0.6; } }
-  /* gerhana: piringan hitam dengan cincin cahaya merah */
-  .eclipse { position: absolute; right: 150px; top: 170px; width: 110px; height: 110px; border-radius: 50%; background: #050506;
-    box-shadow: 0 0 0 2px rgba(255,90,90,0.55), 0 0 18px 6px rgba(217,4,22,0.75), 0 0 60px 18px rgba(217,4,22,0.35); animation: glow 4s ease-in-out infinite; pointer-events: none; }
-  @keyframes glow { 50% { box-shadow: 0 0 0 2px rgba(255,120,120,0.7), 0 0 26px 9px rgba(217,4,22,0.9), 0 0 80px 26px rgba(217,4,22,0.4); } }
+  /* jalan raya malam: dua lajur, dua mobil balapan beda kecepatan */
+  .road { position: absolute; left: 0; right: 0; top: 60%; height: 92px; pointer-events: none; overflow: hidden;
+    background: linear-gradient(180deg, transparent 0 6px, rgba(0,0,0,0.42) 6px calc(100% - 6px), transparent calc(100% - 6px)),
+                repeating-linear-gradient(90deg, #f2eeee 0 14px, #d90416 14px 28px) top / 100% 6px no-repeat,
+                repeating-linear-gradient(90deg, #f2eeee 0 14px, #d90416 14px 28px) bottom / 100% 6px no-repeat; }
+  .road::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px dashed rgba(242,238,238,0.45); animation: lines 0.6s linear infinite; }
+  @keyframes lines { to { transform: translateX(-12px); } }
+  .road .car { position: absolute; left: 110%; animation: drive linear infinite; }
+  .road .car svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .road .c1 { top: 4px; width: 128px; animation-duration: 4.2s; filter: drop-shadow(22px 0 0 rgba(217,4,22,0.35)); }
+  .road .c2 { top: 48px; width: 112px; animation-duration: 3.1s; animation-delay: -1.2s; filter: drop-shadow(20px 0 0 rgba(201,162,39,0.35)); }
+  @keyframes drive { from { left: 110%; } to { left: -35%; } }
+  .hero .keycap { position: absolute; right: 120px; bottom: 170px; transform: rotate(-10deg); }
 
   /* ---------- Sisi kanan: form ---------- */
   .formside { padding: 52px 48px; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -195,10 +204,12 @@
     .hero { padding: 30px 20px 30px; border-right: 0; border-bottom: 3px solid var(--ink); }
     .hero h1 { max-width: none; padding-right: 70px; }
     .flag { width: 64px; height: 64px; right: 18px; top: 22px; }
-    .circuit { width: 200px; height: 140px; right: -60px; top: 34%; opacity: 0.5; }
+    .circuit { width: 190px; height: 139px; right: -34px; top: 300px; opacity: 0.85; }
+    .hero { padding-bottom: 104px !important; }
+    .road { top: auto; bottom: 8px; height: 80px; }
+    .road .c1 { width: 104px; } .road .c2 { top: 42px; width: 92px; }
     .sp1 { right: 92px; top: 30px; width: 24px; } .sp2 { display: none; }
-    .sp3, .g2, .g3, .g4 { display: none; }
-    .eclipse { width: 64px; height: 64px; right: 96px; top: 26px; }
+    .sp3, .hero .keycap, .g2, .g3, .g4 { display: none; }
     .g1 { top: auto; bottom: 236px; right: 14px; font-size: 11px; }
     .countdown .digits div { min-width: 0; flex: 1; }
     .countdown b { font-size: 24px; }
@@ -235,12 +246,10 @@
       <span class="chip">🔥 Pendaftaran dibuka</span>
       <p class="over">Night Ride</p>
       <h1 id="eventName">&nbsp;</h1>
-      <p class="tag"><b>ECLIPSE:</b> Where every mile tells a story and every journey creates a legacy</p>
       <div class="info">
         <div id="eventDate"></div>
         <div id="eventPlace"></div>
         <div id="eventPrice"></div>
-        <div id="dressCode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-1 2-2.5 3-4 3S9 5 8 3z"/></svg>Dress code: Hitam &amp; Merah</div>
       </div>
       <div class="countdown hidden" id="countdown">
         <span>Lights out in</span>
@@ -266,14 +275,24 @@
       <rect x="8" y="6" width="4" height="56" rx="2" fill="#fff"/>
       <path d="M12 8c10-4 16 4 26 0s14-2 22 0v28c-8-2-12-4-22 0s-16-4-26 0z" fill="url(#ck)" stroke="#fff" stroke-width="2"/>
     </svg>
-    <svg class="circuit" viewBox="0 0 280 200" fill="none" aria-hidden="true">
-      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#0b0a0d" stroke-width="6" stroke-linejoin="round"/>
+    <svg class="circuit" viewBox="-10 -10 300 220" fill="none" aria-hidden="true">
+      <defs><path id="track" d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z"/></defs>
+      <use href="#track" stroke="#f2eeee" stroke-width="24" stroke-linejoin="round"/>
+      <use href="#track" stroke="#d90416" stroke-width="24" stroke-linejoin="round" stroke-dasharray="7 7"/>
+      <use href="#track" stroke="#1a1a1f" stroke-width="17" stroke-linejoin="round"/>
+      <use href="#track" stroke="rgba(242,238,238,.55)" stroke-width="1" stroke-dasharray="5 5"/>
+      <g transform="translate(100 80)"><rect x="-2" y="-8.5" width="4" height="17" fill="#fff"/><rect x="-2" y="-8.5" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="-5.67" width="2" height="2.83" fill="#0b0a0d"/><rect x="-2" y="-2.83" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="0" width="2" height="2.83" fill="#0b0a0d"/><rect x="-2" y="2.83" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="5.67" width="2" height="2.83" fill="#0b0a0d"/></g>
+      <g id="carRed"><g transform="scale(1.35)"><rect x="-10" y="-6" width="3" height="12" rx="1" fill="#0b0a0d"/><rect x="-8" y="-6.5" width="4.5" height="3" rx="1" fill="#111"/><rect x="-8" y="3.5" width="4.5" height="3" rx="1" fill="#111"/><path d="M-8 -2.6H3l7 1.4v2.4l-7 1.4H-8z" fill="#d90416" stroke="#0b0a0d" stroke-width=".8"/><circle r="1.7" fill="#c9a227" stroke="#0b0a0d" stroke-width=".6"/><rect x="3" y="-6" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="3" y="3.2" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="9.5" y="-5.5" width="2" height="11" rx=".8" fill="#0b0a0d"/><circle cx="12.5" cy="-2" r="1.1" fill="#fff6c8"/><circle cx="12.5" cy="2" r="1.1" fill="#fff6c8"/></g></g>
+      <g id="carGold"><g transform="scale(1.35)"><rect x="-10" y="-6" width="3" height="12" rx="1" fill="#0b0a0d"/><rect x="-8" y="-6.5" width="4.5" height="3" rx="1" fill="#111"/><rect x="-8" y="3.5" width="4.5" height="3" rx="1" fill="#111"/><path d="M-8 -2.6H3l7 1.4v2.4l-7 1.4H-8z" fill="#c9a227" stroke="#0b0a0d" stroke-width=".8"/><circle r="1.7" fill="#f2eeee" stroke="#0b0a0d" stroke-width=".6"/><rect x="3" y="-6" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="3" y="3.2" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="9.5" y="-5.5" width="2" height="11" rx=".8" fill="#0b0a0d"/><circle cx="12.5" cy="-2" r="1.1" fill="#fff6c8"/><circle cx="12.5" cy="2" r="1.1" fill="#fff6c8"/></g></g>
     </svg>
+    <div class="road" aria-hidden="true">
+      <div class="car c1"><svg viewBox="0 0 240 84"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#f2eeee" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#d90416" stroke-width="5"/><path d="M80 43 204 37" stroke="#c9a227" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#c9a227" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="158" y="37" font-family="Space Mono, monospace" font-weight="700" font-size="14" fill="#d90416">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#c2c2c8"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#c2c2c8"/><path d="M2 50 -40 44v18z" fill="rgba(255,246,200,.35)"/></svg></div>
+      <div class="car c2"><svg viewBox="0 0 240 84"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#c9a227" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#0b0a0d" stroke-width="5"/><path d="M80 43 204 37" stroke="#f2eeee" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#f2eeee" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="158" y="37" font-family="Space Mono, monospace" font-weight="700" font-size="14" fill="#0b0a0d">14</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#c2c2c8"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#c2c2c8"/><path d="M2 50 -40 44v18z" fill="rgba(255,246,200,.35)"/></svg></div>
+    </div>
     <svg class="spark sp1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
     <svg class="spark sp2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
     <svg class="spark sp3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
-    <span class="eclipse" aria-hidden="true"></span>
+    <span class="keycap" aria-hidden="true">F1</span>
     <span class="gz g1" aria-hidden="true">no cap 🧢 seru parah</span>
     <span class="gz g2" aria-hidden="true">main character energy ✨</span>
     <span class="gz g3" aria-hidden="true">ga dateng = rugi 💀</span>
@@ -374,7 +393,7 @@ fetch("/api/event").then(r => r.json()).then(e => {
     : "Kuota terbatas, first come first served 🏁";
   if (e.start) countdown(Date.parse(e.start));
 
-  const items = [e.name, "Night Ride", "Eclipse", "Through the night, beyond the horizon", e.date, "Tiket QR instan", e.place, "Dress code hitam & merah", "Kuota terbatas"].filter(Boolean);
+  const items = [e.name, "Night Ride", "Eclipse", "Through the night, beyond the horizon", e.date, "Tiket QR instan", e.place, "Kuota terbatas"].filter(Boolean);
   const html = items.map(t => `<span>${t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
 $("marquee").innerHTML = html + html + html + html;
   const tape = (words) => { const h = words.map(t => `<span>${t}</span>`).join(""); return h + h + h + h; };
@@ -400,6 +419,24 @@ $("marquee").innerHTML = html + html + html + html;
     $("payBox").classList.remove("hidden");
   }
 });
+
+// ---------- Mobil muter sirkuit ----------
+(function () {
+  const ns = "http://www.w3.org/2000/svg";
+  const still = { carRed: "translate(170 44)", carGold: "translate(70 80) rotate(180)" };
+  [["carRed", "0s"], ["carGold", "-2.4s"]].forEach(([id, begin]) => {
+    const g = document.getElementById(id);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return g.setAttribute("transform", still[id]);
+    const m = document.createElementNS(ns, "animateMotion");
+    m.setAttribute("dur", id === "carRed" ? "5.5s" : "6.2s");
+    m.setAttribute("repeatCount", "indefinite");
+    m.setAttribute("rotate", "auto");
+    m.setAttribute("begin", begin);
+    const p = document.createElementNS(ns, "mpath");
+    p.setAttribute("href", "#track");
+    m.appendChild(p); g.appendChild(m);
+  });
+})();
 
 // ---------- Hitung mundur ----------
 function countdown(at) {
