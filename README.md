@@ -164,7 +164,7 @@ Kolom form ada di `public/index.html` (tampilan) dan di bagian `/api/register` p
 
 ## Tema & logo
 
-Tampilan mengikuti tema **F1 x Fast & Furious** (Y2K, retro, kertas, dominan biru). Warna dan font diatur di bagian atas `public/style.css`. Tagline "RADIANCE: From rising flames to ultimate glory" ada di `public/index.html`.
+Tampilan mengikuti tema **Night Ride · ECLIPSE** (hitam & merah maroon, retro, kertas). Warna dan font diatur di bagian atas `public/style.css`. Tulisan "Night Ride", tagline ECLIPSE, dan info dress code ada di `public/index.html`.
 
 Logo penyelenggara ada di `public/logos.png` dan tampil di halaman pendaftaran, tiket (termasuk gambar yang diunduh), menu panitia, dan login. Mau logonya lebih tajam? Export ulang deretan logo dari Canva sebagai PNG (latar transparan atau gelap, tinggi minimal 200px), lalu timpa file `public/logos.png` dengan nama yang sama.
 

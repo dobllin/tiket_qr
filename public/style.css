@@ -1,31 +1,31 @@
-/* Tema: F1 x Fast & Furious · Y2K · retro · paper (dominan biru) */
+/* Tema: Night Ride · ECLIPSE (hitam & merah maroon) · retro · paper */
 :root {
-  --ink: #171c2f;        /* navy paling gelap: teks judul, garis */
-  --ink-2: #26324c;      /* navy */
-  --slate: #323d51;
-  --steel: #687899;      /* biru abu */
-  --peach: #ffa489;
-  --red: #b6192a;        /* merah balap, untuk tombol utama */
-  --red-d: #8f1220;
-  --maroon: #541b2e;
-  --paper: #fef6eb;      /* kertas krem */
-  --paper-2: #f6e9d6;
+  --ink: #0b0a0d;        /* navy paling gelap: teks judul, garis */
+  --ink-2: #6e0011;      /* navy */
+  --slate: #3a3a3f;
+  --steel: #a08a83;      /* biru abu */
+  --peach: #c9a227;
+  --red: #d90416;        /* merah balap, untuk tombol utama */
+  --red-d: #8b0013;
+  --maroon: #8b0013;
+  --paper: #f6efea;      /* kertas krem */
+  --paper-2: #ece0da;
 
   /* nama lama dipertahankan supaya semua halaman tetap jalan */
   --gold: var(--red);
-  --primary: #26324c;
-  --primary-d: #171c2f;
-  --blue: #687899;
-  --purple: #687899;
-  --mint: #e4e8f1;       /* tint biru muda */
-  --sky: #ffe6dc;        /* tint peach */
-  --pink: #ffa489;
-  --yellow: #ffd9a8;
+  --primary: #6e0011;
+  --primary-d: #0b0a0d;
+  --blue: #a08a83;
+  --purple: #a08a83;
+  --mint: #f1e6e3;       /* tint biru muda */
+  --sky: #f6e2dc;        /* tint peach */
+  --pink: #c9a227;
+  --yellow: #e6d3a1;
   --line: #ddd0bd;
   --text: #1d2236;
   --mute: #686d7e;
   --ok: #1f8a5b;
-  --bad: #b6192a;
+  --bad: #d90416;
   --warn: #d9822b;
   --radius: 14px;
   --shadow: 5px 5px 0 var(--ink);
@@ -88,7 +88,7 @@ input:focus, select:focus { box-shadow: 3px 3px 0 var(--steel); }
 .btn:focus-visible { outline: 3px solid var(--steel); outline-offset: 3px; }
 .btn.gold { background: var(--red); color: #fff; }
 .btn.gold:hover { background: var(--red-d); }
-.btn.purple { background: var(--steel); color: #fff; }
+.btn.purple { background: #3a3a3f; color: #fff; }
 .btn.ghost { background: #fff; color: var(--ink); }
 .btn.ghost:hover { background: var(--paper); }
 .btn.small { padding: 6px 12px; font-size: 12.5px; box-shadow: 2px 2px 0 var(--ink); }
@@ -126,13 +126,14 @@ input:focus, select:focus { box-shadow: 3px 3px 0 var(--steel); }
 /* Strip palet warna seperti di moodboard */
 .palette { display: flex; height: 12px; }
 .palette i { flex: 1; }
-.palette i:nth-child(1) { background: #171c2f; }
-.palette i:nth-child(2) { background: #26324c; }
-.palette i:nth-child(3) { background: #323d51; }
-.palette i:nth-child(4) { background: #687899; }
-.palette i:nth-child(5) { background: #ffa489; }
-.palette i:nth-child(6) { background: #b6192a; }
-.palette i:nth-child(7) { background: #541b2e; }
+.palette i:nth-child(1) { background: #080b0d; }
+.palette i:nth-child(2) { background: #1a1a1f; }
+.palette i:nth-child(3) { background: #3a3a3f; }
+.palette i:nth-child(4) { background: #d7c5c1; }
+.palette i:nth-child(5) { background: #d90416; }
+.palette i:nth-child(6) { background: #8b0013; }
+.palette i:nth-child(7) { background: #c9a227; }
+.palette i:nth-child(8) { background: #6f5218; }
 /* Deretan logo penyelenggara */
 .logos { display: block; height: 64px; width: auto; max-width: 100%; align-self: flex-start; object-fit: contain; }
 /* Tombol keyboard "F1" */

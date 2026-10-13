@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#171c2f">
+<meta name="theme-color" content="#0b0a0d">
 <title>Pendaftaran</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,21 +15,21 @@
   /* ---------- Sisi kiri: poster ---------- */
   .hero { position: relative; overflow: hidden; color: #fff; padding: 44px 48px 40px;
     display: flex; flex-direction: column; justify-content: space-between; gap: 30px;
-    background: radial-gradient(ellipse at 110% -10%, rgba(104,120,153,0.55), transparent 55%),
-                linear-gradient(165deg, #26324c 0%, #171c2f 70%); border-right: 3px solid var(--ink); }
-  .hero::before { content: ""; position: absolute; inset: auto -60px -80px auto; width: 380px; height: 380px; color: #687899; opacity: 0.35;
+    background: radial-gradient(ellipse at 110% -10%, rgba(217,4,22,0.45), transparent 55%),
+                linear-gradient(165deg, #6e0011 0%, #0b0a0d 70%); border-right: 3px solid var(--ink); }
+  .hero::before { content: ""; position: absolute; inset: auto -60px -80px auto; width: 380px; height: 380px; color: #a08a83; opacity: 0.35;
     background-image: radial-gradient(currentColor 1.8px, transparent 2px); background-size: 11px 11px; border-radius: 50%;
     -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
   .hero > * { position: relative; z-index: 1; }
-  .hero > svg, .hero > .sticker, .hero > .keycap { z-index: 0; }
+  .hero > svg, .hero > .sticker, .hero > .eclipse { z-index: 0; }
   .hero .chip { background: var(--peach); border-color: var(--peach); color: var(--ink); }
   .hero .over { font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.18em; color: var(--peach); margin: 26px 0 8px; text-transform: uppercase; }
   /* judul chrome ala Y2K */
   .hero h1 { font-size: clamp(50px, 7vw, 100px); line-height: 0.88; margin: 0 0 16px; max-width: 9ch;
-    background: linear-gradient(180deg, #ffffff 0%, #e3e8f3 36%, #7d8aa8 50%, #f7f9fc 60%, #b7c1d6 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #e8e8ec 36%, #8a8a92 50%, #f7f9fc 60%, #c2c2c8 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(4px 4px 0 var(--red)) drop-shadow(0 0 22px rgba(255, 164, 137, 0.25)); }
-  .hero .tag { font-family: var(--f-mono); font-size: 14px; color: #d9dfec; margin: 0 0 24px; max-width: 34ch; }
+    filter: drop-shadow(4px 4px 0 var(--red)) drop-shadow(0 0 22px rgba(201,162,39, 0.25)); }
+  .hero .tag { font-family: var(--f-mono); font-size: 14px; color: #e6d8d3; margin: 0 0 24px; max-width: 34ch; }
   .hero .tag b { color: #fff; }
   .info { display: flex; flex-direction: column; gap: 10px; }
   .info div { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; background: var(--paper); color: var(--ink);
@@ -41,9 +41,9 @@
   .countdown { margin-top: 22px; }
   .countdown > span { display: block; font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--peach); text-transform: uppercase; margin-bottom: 8px; }
   .countdown .digits { display: flex; gap: 8px; }
-  .countdown .digits div { background: #0d1020; border: 2px solid #687899; border-radius: 8px; padding: 6px 8px 4px; min-width: 62px; text-align: center; }
+  .countdown .digits div { background: #050506; border: 2px solid #a08a83; border-radius: 8px; padding: 6px 8px 4px; min-width: 62px; text-align: center; }
   .countdown b { display: block; font-family: var(--f-mono); font-size: 28px; line-height: 1.1; color: #fff; font-variant-numeric: tabular-nums; }
-  .countdown small { font-family: var(--f-mono); font-size: 10px; color: #9aa6c1; text-transform: uppercase; letter-spacing: 0.1em; }
+  .countdown small { font-family: var(--f-mono); font-size: 10px; color: #b8a39c; text-transform: uppercase; letter-spacing: 0.1em; }
   .countdown .live { font-family: var(--f-head); font-size: 26px; color: #fff; text-transform: uppercase; }
 
   /* garis kecepatan */
@@ -51,9 +51,9 @@
   .speed i { position: absolute; right: -40%; height: 2px; width: 30%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55)); animation: dash 1.6s linear infinite; }
   .speed i:nth-child(1) { top: 14%; animation-duration: 1.3s; }
   .speed i:nth-child(2) { top: 31%; width: 18%; animation-duration: 2.1s; animation-delay: 0.4s; }
-  .speed i:nth-child(3) { top: 47%; animation-duration: 1.7s; animation-delay: 0.9s; background: linear-gradient(90deg, transparent, rgba(255,164,137,0.6)); }
+  .speed i:nth-child(3) { top: 47%; animation-duration: 1.7s; animation-delay: 0.9s; background: linear-gradient(90deg, transparent, rgba(201,162,39,0.6)); }
   .speed i:nth-child(4) { top: 63%; width: 22%; animation-duration: 1.2s; animation-delay: 0.2s; }
-  .speed i:nth-child(5) { top: 78%; animation-duration: 1.9s; animation-delay: 1.1s; background: linear-gradient(90deg, transparent, rgba(182,25,42,0.8)); }
+  .speed i:nth-child(5) { top: 78%; animation-duration: 1.9s; animation-delay: 1.1s; background: linear-gradient(90deg, transparent, rgba(217,4,22,0.8)); }
   .speed i:nth-child(6) { top: 90%; width: 14%; animation-duration: 1.4s; animation-delay: 0.6s; }
   @keyframes dash { to { transform: translateX(-560%); } }
 
@@ -65,7 +65,7 @@
   .g1 { --r: 7deg; right: 22px; top: 300px; background: var(--peach); color: var(--ink); }
   .g2 { --r: -6deg; right: 40px; top: 610px; background: #fff; color: var(--ink); animation-delay: 0.7s; }
   .g3 { --r: 5deg; right: 28px; bottom: 150px; background: var(--red); color: #fff; animation-delay: 1.3s; }
-  .g4 { --r: -8deg; right: 36px; bottom: 40px; background: #ffd9a8; color: var(--ink); animation-delay: 2s; }
+  .g4 { --r: -8deg; right: 36px; bottom: 40px; background: #e6d3a1; color: var(--ink); animation-delay: 2s; }
 
   .bottom { display: flex; flex-direction: column; gap: 18px; }
   .slots { align-self: flex-start; background: var(--paper); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 12px; padding: 14px 18px;
@@ -74,10 +74,10 @@
   .slots b { font-family: var(--f-head); color: var(--red); font-size: 44px; line-height: 1; }
   .slots .top span { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
   .slots .bar { height: 12px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; margin-top: 10px; overflow: hidden; }
-  .slots .bar i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #d43a48 8px 16px); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
+  .slots .bar i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #ef2a3a 8px 16px); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
   .slots small { display: block; margin-top: 8px; color: var(--mute); font-size: 12.5px; font-weight: 600; }
   .org { display: flex; flex-direction: column; gap: 8px; }
-  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #9aa6c1; text-transform: uppercase; }
+  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #b8a39c; text-transform: uppercase; }
 
   /* Ornamen */
   .flag { position: absolute; right: 44px; top: 34px; width: 96px; height: 96px; transform: rotate(8deg); animation: wave 3.2s ease-in-out infinite; transform-origin: 10% 100%; }
@@ -88,7 +88,10 @@
   .sp2 { width: 18px; right: 150px; top: 112px; animation-delay: 0.8s; fill: var(--peach); }
   .sp3 { width: 26px; right: 60px; bottom: 210px; animation-delay: 1.4s; }
   @keyframes twinkle { 50% { transform: scale(0.7) rotate(20deg); opacity: 0.6; } }
-  .hero .keycap { position: absolute; right: 120px; bottom: 170px; transform: rotate(-10deg); }
+  /* gerhana: piringan hitam dengan cincin cahaya merah */
+  .eclipse { position: absolute; right: 150px; top: 170px; width: 110px; height: 110px; border-radius: 50%; background: #050506;
+    box-shadow: 0 0 0 2px rgba(255,90,90,0.55), 0 0 18px 6px rgba(217,4,22,0.75), 0 0 60px 18px rgba(217,4,22,0.35); animation: glow 4s ease-in-out infinite; pointer-events: none; }
+  @keyframes glow { 50% { box-shadow: 0 0 0 2px rgba(255,120,120,0.7), 0 0 26px 9px rgba(217,4,22,0.9), 0 0 80px 26px rgba(217,4,22,0.4); } }
 
   /* ---------- Sisi kanan: form ---------- */
   .formside { padding: 52px 48px; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -109,8 +112,8 @@
   .fuel { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; font-family: var(--f-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--ink); }
   .fuel .tank { flex: 1; height: 14px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; overflow: hidden; }
   .fuel .tank i { display: block; height: 100%; width: 0; transition: width 0.4s cubic-bezier(.2,.8,.2,1), background 0.3s;
-    background: repeating-linear-gradient(-45deg, var(--steel) 0 8px, #8494b5 8px 16px); }
-  .fuel.full .tank i { background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #e04050 8px 16px); }
+    background: repeating-linear-gradient(-45deg, var(--steel) 0 8px, #bfaaa3 8px 16px); }
+  .fuel.full .tank i { background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #f04555 8px 16px); }
   .fuel b { min-width: 42px; text-align: right; }
   .fuelmsg { display: block; font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); margin-bottom: 12px; }
   .card .fine { font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); text-align: center; margin: 14px 0 0; }
@@ -158,7 +161,7 @@
   @media (max-width: 600px) { footer { font-size: 14.5px; } }
 
   /* intro lampu start F1 */
-  .intro { position: fixed; inset: 0; z-index: 100; background: radial-gradient(ellipse at 50% 40%, #26324c, #0d1020 70%);
+  .intro { position: fixed; inset: 0; z-index: 100; background: radial-gradient(ellipse at 50% 40%, #6e0011, #050506 70%);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 20px; cursor: pointer;
     transition: transform 0.6s cubic-bezier(.7,0,.3,1); }
   .intro.go { transform: translateY(-105%); }
@@ -167,17 +170,17 @@
   .pod i { width: clamp(30px, 8vw, 58px); aspect-ratio: 1; border-radius: 50%; background: #2a1216; border: 3px solid #0a0a0a; transition: background 0.06s, box-shadow 0.06s; }
   .pod.on i { background: #ff2338; box-shadow: 0 0 26px 6px rgba(255, 35, 56, 0.65); }
   .intro p { font-family: var(--f-head); font-weight: 700; color: #fff; font-size: clamp(30px, 7vw, 64px); text-transform: uppercase; margin: 0; min-height: 1.1em; text-align: center; line-height: 1; }
-  .intro p.out { color: transparent; -webkit-text-fill-color: transparent; background: linear-gradient(180deg, #fff, #ffa489 55%, #b6192a); -webkit-background-clip: text; background-clip: text;
+  .intro p.out { color: transparent; -webkit-text-fill-color: transparent; background: linear-gradient(180deg, #fff, #c9a227 55%, #d90416); -webkit-background-clip: text; background-clip: text;
     animation: pop 0.4s cubic-bezier(.2,1.6,.4,1); }
   @keyframes pop { from { transform: scale(0.4); } }
-  .intro small { font-family: var(--f-mono); color: #687899; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .intro small { font-family: var(--f-mono); color: #a08a83; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; }
 
   /* mobil ngebut setelah daftar */
   .zoom { position: fixed; inset: 0; z-index: 110; pointer-events: none; overflow: hidden;
     background: repeating-linear-gradient(0deg, transparent 0 34px, rgba(255,255,255,0.0) 34px 36px); animation: flash 1.05s ease-in forwards; }
   .zoom svg { width: 100%; height: auto; display: block; }
   .zoom span { position: absolute; top: 56%; left: 105%; width: clamp(260px, 42vw, 520px); line-height: 0; transform: translateY(-50%);
-    filter: drop-shadow(40px 0 0 rgba(255,164,137,0.45)) drop-shadow(80px 0 0 rgba(182,25,42,0.3)); animation: zoom 1s cubic-bezier(.55,0,.35,1) forwards; }
+    filter: drop-shadow(40px 0 0 rgba(201,162,39,0.45)) drop-shadow(80px 0 0 rgba(217,4,22,0.3)); animation: zoom 1s cubic-bezier(.55,0,.35,1) forwards; }
   .zoom b { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--f-head); font-size: clamp(56px, 12vw, 130px); color: var(--red);
     -webkit-text-stroke: 3px var(--ink); text-shadow: 6px 6px 0 var(--ink); animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); white-space: nowrap; }
   @keyframes zoom { to { left: -70%; } }
@@ -194,7 +197,8 @@
     .flag { width: 64px; height: 64px; right: 18px; top: 22px; }
     .circuit { width: 200px; height: 140px; right: -60px; top: 34%; opacity: 0.5; }
     .sp1 { right: 92px; top: 30px; width: 24px; } .sp2 { display: none; }
-    .sp3, .hero .keycap, .g2, .g3, .g4 { display: none; }
+    .sp3, .g2, .g3, .g4 { display: none; }
+    .eclipse { width: 64px; height: 64px; right: 96px; top: 26px; }
     .g1 { top: auto; bottom: 236px; right: 14px; font-size: 11px; }
     .countdown .digits div { min-width: 0; flex: 1; }
     .countdown b { font-size: 24px; }
@@ -222,20 +226,21 @@
   })();
 </script>
 <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
-<div class="palette" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="palette" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
 <div class="wrap">
   <aside class="hero">
     <div class="speed" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div>
       <span class="chip">🔥 Pendaftaran dibuka</span>
-      <p class="over">F1 × Fast &amp; Furious · Edisi 2026</p>
+      <p class="over">Night Ride</p>
       <h1 id="eventName">&nbsp;</h1>
-      <p class="tag"><b>RADIANCE:</b> From rising flames to ultimate glory</p>
+      <p class="tag"><b>ECLIPSE:</b> Where every mile tells a story and every journey creates a legacy</p>
       <div class="info">
         <div id="eventDate"></div>
         <div id="eventPlace"></div>
         <div id="eventPrice"></div>
+        <div id="dressCode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-1 2-2.5 3-4 3S9 5 8 3z"/></svg>Dress code: Hitam &amp; Merah</div>
       </div>
       <div class="countdown hidden" id="countdown">
         <span>Lights out in</span>
@@ -257,18 +262,18 @@
     </div>
 
     <svg class="flag" viewBox="0 0 64 64" aria-hidden="true">
-      <defs><pattern id="ck" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#fff"/><rect width="4" height="4" fill="#171c2f"/><rect x="4" y="4" width="4" height="4" fill="#171c2f"/></pattern></defs>
+      <defs><pattern id="ck" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#fff"/><rect width="4" height="4" fill="#0b0a0d"/><rect x="4" y="4" width="4" height="4" fill="#0b0a0d"/></pattern></defs>
       <rect x="8" y="6" width="4" height="56" rx="2" fill="#fff"/>
       <path d="M12 8c10-4 16 4 26 0s14-2 22 0v28c-8-2-12-4-22 0s-16-4-26 0z" fill="url(#ck)" stroke="#fff" stroke-width="2"/>
     </svg>
     <svg class="circuit" viewBox="0 0 280 200" fill="none" aria-hidden="true">
       <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#171c2f" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z" stroke="#0b0a0d" stroke-width="6" stroke-linejoin="round"/>
     </svg>
     <svg class="spark sp1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
     <svg class="spark sp2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
     <svg class="spark sp3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
-    <span class="keycap" aria-hidden="true">F1</span>
+    <span class="eclipse" aria-hidden="true"></span>
     <span class="gz g1" aria-hidden="true">no cap 🧢 seru parah</span>
     <span class="gz g2" aria-hidden="true">main character energy ✨</span>
     <span class="gz g3" aria-hidden="true">ga dateng = rugi 💀</span>
@@ -369,12 +374,12 @@ fetch("/api/event").then(r => r.json()).then(e => {
     : "Kuota terbatas, first come first served 🏁";
   if (e.start) countdown(Date.parse(e.start));
 
-  const items = [e.name, "F1", "Fast & Furious", "Y2K", "Retro", "Paper", e.date, "Tiket QR instan", e.place, "Kuota terbatas"].filter(Boolean);
+  const items = [e.name, "Night Ride", "Eclipse", "Through the night, beyond the horizon", e.date, "Tiket QR instan", e.place, "Dress code hitam & merah", "Kuota terbatas"].filter(Boolean);
   const html = items.map(t => `<span>${t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
 $("marquee").innerHTML = html + html + html + html;
   const tape = (words) => { const h = words.map(t => `<span>${t}</span>`).join(""); return h + h + h + h; };
-  $("tape1").innerHTML = tape(["Gas pol", "No cap", "Lights out", "Main character", "Full throttle"]);
-  $("tape2").innerHTML = tape(["Jangan sampai FOMO", "Slay di garis start", "Tiket QR instan", "See you at the grid"]);
+  $("tape1").innerHTML = tape(["Night ride", "Gas pol", "No cap", "Eclipse mode", "Full throttle"]);
+  $("tape2").innerHTML = tape(["Through the night", "Beyond the horizon", "Jangan sampai FOMO", "Tiket QR instan"]);
 
   if (e.remaining <= 0) { $("formBox").classList.add("hidden"); $("closedBox").classList.remove("hidden"); }
   if (e.payment && e.payment.required) {
@@ -478,7 +483,7 @@ function fuel() {
 ["name", "email", "phone", "institution", "angkatan"].forEach(id => $(id).addEventListener("input", fuel));
 
 // Mobil ngebut lewat layar sebelum pindah ke halaman tiket
-const CAR = `<svg viewBox="0 0 240 84" aria-hidden="true"><rect x="192" y="8" width="38" height="9" rx="2" fill="#171c2f"/><rect x="204" y="14" width="8" height="30" fill="#171c2f"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#b6192a" stroke="#171c2f" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#fff" stroke-width="4"/><path d="M80 44 204 38" stroke="#ffa489" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#ffa489" stroke="#171c2f" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#171c2f" stroke-width="4" stroke-linecap="round"/><text x="160" y="36" font-family="Space Mono, monospace" font-weight="700" font-size="13" fill="#fff">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#171c2f"/><rect x="34" y="53" width="176" height="6" fill="#171c2f"/><circle cx="50" cy="58" r="17" fill="#171c2f"/><circle cx="50" cy="58" r="7" fill="#687899"/><circle cx="184" cy="56" r="20" fill="#171c2f"/><circle cx="184" cy="56" r="8" fill="#687899"/></svg>`;
+const CAR = `<svg viewBox="0 0 240 84" aria-hidden="true"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#d90416" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#fff" stroke-width="4"/><path d="M80 44 204 38" stroke="#c9a227" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#c9a227" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="160" y="36" font-family="Space Mono, monospace" font-weight="700" font-size="13" fill="#fff">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#a08a83"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#a08a83"/></svg>`;
 function zoom() {
   if (calm) return Promise.resolve();
   const z = document.createElement("div");

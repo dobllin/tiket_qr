@@ -425,7 +425,7 @@ app.get("/api/export.xlsx", auth, async (req, res) => {
   const list = (await q.all()).reverse();
   const head = (ws, last) => {
     ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF26324C" } };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6E0011" } };
     ws.views = [{ state: "frozen", ySplit: 1 }];
     if (last) ws.autoFilter = { from: "A1", to: last + "1" };
   };

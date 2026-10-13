@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#171c2f">
+<meta name="theme-color" content="#0b0a0d">
 <title>Menu panitia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
-  body { min-height: 100vh; background: radial-gradient(ellipse at 100% 0%, rgba(104,120,153,0.5), transparent 50%), linear-gradient(165deg, #26324c, #171c2f 70%); }
+  body { min-height: 100vh; background: radial-gradient(ellipse at 100% 0%, rgba(217,4,22,0.35), transparent 50%), linear-gradient(165deg, #6e0011, #0b0a0d 70%); }
   main { max-width: 780px; margin: 0 auto; padding: 36px 20px 56px; }
   .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
   .top .chip { background: var(--peach); border-color: var(--peach); }
@@ -19,10 +19,10 @@
   .sub { color: var(--peach); font-family: var(--f-mono); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 13px; margin: 0 0 28px; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .item { display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: var(--ink);
-    background: var(--paper); border: 2.5px solid var(--ink); border-radius: 14px; padding: 20px 18px; box-shadow: 6px 6px 0 #0d1020;
+    background: var(--paper); border: 2.5px solid var(--ink); border-radius: 14px; padding: 20px 18px; box-shadow: 6px 6px 0 #050506;
     transition: transform 0.1s, box-shadow 0.1s; }
   .item:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--red); }
-  .item:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #0d1020; }
+  .item:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #050506; }
   .item:focus-visible { outline: 3px solid var(--peach); outline-offset: 3px; }
   .item .ic { width: 50px; height: 50px; border-radius: 10px; border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; color: #fff; }
   .item .ic svg { width: 26px; height: 26px; }
@@ -31,11 +31,11 @@
   .item.dash .ic { background: var(--ink-2); }
   .item.scan .ic { background: var(--red); }
   .item.reg .ic { background: var(--steel); }
-  .stats { margin-top: 24px; background: rgba(255,255,255,0.06); border: 2px dashed #687899; color: #d9dfec; border-radius: 12px; padding: 14px 20px;
+  .stats { margin-top: 24px; background: rgba(255,255,255,0.06); border: 2px dashed #a08a83; color: #e6d8d3; border-radius: 12px; padding: 14px 20px;
     display: flex; gap: 24px; flex-wrap: wrap; font-family: var(--f-mono); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
   .stats b { color: #fff; font-size: 22px; font-family: var(--f-head); }
   .org { margin-top: 36px; display: flex; flex-direction: column; gap: 8px; }
-  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #9aa6c1; text-transform: uppercase; }
+  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #b8a39c; text-transform: uppercase; }
   @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } .item { flex-direction: row; align-items: center; } .item .ic { flex: none; } }
 </style>
 </head>
