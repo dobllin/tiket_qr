@@ -23,7 +23,8 @@
   .hero > * { position: relative; z-index: 1; }
   .hero > svg, .hero > .sticker, .hero > .keycap, .hero > .road { z-index: 0; }
   .hero .chip { background: var(--peach); border-color: var(--peach); color: var(--ink); }
-  .hero .over { font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.18em; color: var(--peach); margin: 26px 0 8px; text-transform: uppercase; }
+  .hero .over { font-family: var(--f-mono); font-size: 13.5px; line-height: 1.6; letter-spacing: 0.02em; color: #e6d8d3; margin: 24px 0 14px; max-width: 44ch; }
+  .hero .over b { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: 4px; background: var(--peach); color: var(--ink); letter-spacing: 0.14em; font-size: 12px; vertical-align: 1px; }
   /* judul chrome ala Y2K */
   .hero h1 { font-size: clamp(50px, 7vw, 100px); line-height: 0.88; margin: 0 0 16px; max-width: 9ch;
     background: linear-gradient(180deg, #ffffff 0%, #e8e8ec 36%, #8a8a92 50%, #f7f9fc 60%, #c2c2c8 100%);
@@ -200,6 +201,7 @@
   @keyframes puff { to { opacity: 0; transform: translate(-50%, -160%) scale(0.4) rotate(40deg); } }
 
   @media (max-width: 900px) {
+    .hero .over { max-width: none; }
     .wrap { grid-template-columns: 1fr; min-height: 0; }
     .hero { padding: 30px 20px 30px; border-right: 0; border-bottom: 3px solid var(--ink); }
     .hero h1 { max-width: none; padding-right: 70px; }
@@ -244,7 +246,7 @@
     <div class="speed" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div>
       <span class="chip">🔥 Pendaftaran dibuka</span>
-      <p class="over"><b>ECLIPSE</b>: Where Every Mile Tells a Story and Every Journey Creates a Legacy</p>
+      <p class="over"><b>ECLIPSE</b> Where every mile tells a story and every journey creates a legacy</p>
       <h1 id="eventName">&nbsp;</h1>
       <div class="info">
         <div id="eventDate"></div>
