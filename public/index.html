@@ -153,8 +153,23 @@
   .drop-done { display: flex; align-items: center; gap: 14px; text-align: left; }
   .drop-done img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; border: 2px solid var(--ink); }
   .drop-done b { display: block; color: var(--ink); font-size: 14px; word-break: break-all; }
-  .closed { text-align: center; padding: 20px 0; }
-  .closed .emoji { font-size: 52px; }
+  .closed { text-align: center; padding: 6px 0 4px; }
+  .closed .finish { height: 22px; margin: 0 -4px 22px; border: 2px solid var(--ink); border-radius: 6px;
+    background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 22px 22px; animation: finishmove 1.2s linear infinite; }
+  @keyframes finishmove { to { background-position: 22px 0; } }
+  .closed .stamp { display: inline-block; font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.22em;
+    color: var(--red); border: 3px solid var(--red); border-radius: 6px; padding: 4px 14px; margin-bottom: 16px;
+    transform: rotate(-4deg); animation: stampin 0.5s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes stampin { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } }
+  .closed .emoji { font-size: 54px; line-height: 1; margin-bottom: 8px; display: block; animation: wob2 2.4s ease-in-out infinite; }
+  @keyframes wob2 { 50% { transform: translateY(-5px) rotate(-6deg); } }
+  .closed h2 { font-size: 34px; margin: 6px 0 10px; }
+  .closed h2 mark { background: var(--ink-2); color: #fff; padding: 0 8px; border-radius: 4px; box-shadow: 3px 3px 0 var(--red); }
+  .closed p.mute { margin: 0 auto 18px; max-width: 34ch; }
+  .closed .cinfo { display: flex; flex-direction: column; gap: 6px; align-items: center; margin: 0 0 18px;
+    font-family: var(--f-mono); font-size: 13px; color: var(--ink); }
+  .closed .cinfo span { display: inline-block; background: var(--peach); border: 2px solid var(--ink); border-radius: 6px; padding: 4px 12px; box-shadow: 3px 3px 0 var(--ink); }
+  .closed .note { margin: 0; font-size: 13px; font-weight: 500; border-top: 2px dashed var(--ink); padding-top: 14px; }
 
   /* pita "caution tape" */
   .tapes { position: relative; height: 128px; overflow: hidden; border-top: 3px solid var(--ink); }
@@ -352,9 +367,13 @@
           <p class="fine">Satu email = satu tiket. Jangan curang ya 👀</p>
         </div>
         <div id="closedBox" class="closed hidden">
-          <div class="emoji">😭</div>
-          <h2>Sold out!</h2>
-          <p class="mute">Kursinya udah full semua. Thank you for the hype, sampai ketemu di race berikutnya!</p>
+          <div class="finish" aria-hidden="true"></div>
+          <div class="stamp" id="closedStamp">CLOSED</div>
+          <span class="emoji" id="closedEmoji">🏁</span>
+          <h2 id="closedTitle">Pendaftaran <mark>ditutup!</mark></h2>
+          <p class="mute" id="closedText">Garis finish sudah dilewati. Thank you for the hype, sampai ketemu di race berikutnya!</p>
+          <div class="cinfo"><span id="closedDate"></span><span id="closedPlace"></span></div>
+          <p class="note">Udah daftar? Tiket QR kamu aman. Simpan baik-baik dan tunjukkan di pintu masuk 🎟️</p>
         </div>
       </div>
       <a class="staff" href="/panitia">Kamu panitia? <b>Masuk di sini →</b></a>
@@ -402,7 +421,34 @@ $("marquee").innerHTML = html + html + html + html;
   $("tape1").innerHTML = tape(["Night ride", "Gas pol", "No cap", "Eclipse mode", "Full throttle"]);
   $("tape2").innerHTML = tape(["Through the night", "Beyond the horizon", "Jangan sampai FOMO", "Tiket QR instan"]);
 
-  if (e.remaining <= 0) { $("formBox").classList.add("hidden"); $("closedBox").classList.remove("hidden"); }
+  // Tutup pendaftaran: karena kuota habis, atau karena waktunya sudah lewat
+  const showClosed = (soldOut) => {
+    if (soldOut) {
+      $("closedStamp").textContent = "SOLD OUT";
+      $("closedEmoji").textContent = "😭";
+      $("closedTitle").innerHTML = "Sold <mark>out!</mark>";
+      $("closedText").textContent = "Kursinya udah full semua. Thank you for the hype, sampai ketemu di race berikutnya!";
+    } else {
+      $("remaining").textContent = "TUTUP";
+      $("slotNote").textContent = "Pendaftaran sudah ditutup 🏁";
+    }
+    $("closedDate").textContent = e.date ? "📅 " + e.date : "";
+    $("closedDate").hidden = !e.date;
+    $("closedPlace").textContent = e.place ? "📍 " + e.place : "";
+    $("closedPlace").hidden = !e.place;
+    $("formBox").classList.add("hidden");
+    $("closedBox").classList.remove("hidden");
+  };
+  if (e.remaining <= 0) showClosed(true);
+  else if (e.closed) showClosed(false);
+  else if (e.closeAt) {
+    // Halaman yang lagi terbuka ikut tertutup sendiri saat waktunya habis
+    const left = Date.parse(e.closeAt) - Date.now();
+    if (left > 0 && left < 2147483647) setTimeout(() => showClosed(false), left);
+    const jam = new Date(e.closeAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).replace(":", ".");
+    const tgl = new Date(e.closeAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", timeZone: "Asia/Jakarta" });
+    if (e.remaining > 0 && filled < 80) $("slotNote").textContent = `Pendaftaran ditutup ${tgl} pukul ${jam} WIB ⏰`;
+  }
   if (e.payment && e.payment.required) {
     payRequired = true;
     const price = "Rp" + Number(e.payment.price || 0).toLocaleString("id-ID");
