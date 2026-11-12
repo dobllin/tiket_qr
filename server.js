@@ -1,649 +1,518 @@
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b0a0d">
-<title>Pendaftaran</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
-<style>
-  .wrap { min-height: calc(100vh - 40px); display: grid; grid-template-columns: 1.08fr 1fr; }
+require("dotenv").config();
+const path = require("path");
+const crypto = require("crypto");
+const express = require("express");
+const cookieSession = require("cookie-session");
+const { createClient } = require("@libsql/client"); // SQLite: file lokal atau Turso (online)
+const QRCode = require("qrcode");
+const ExcelJS = require("exceljs");
 
-  /* ---------- Sisi kiri: poster ---------- */
-  .hero { position: relative; overflow: hidden; color: #fff; padding: 44px 48px 40px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 30px;
-    background: radial-gradient(ellipse at 110% -10%, rgba(217,4,22,0.45), transparent 55%),
-                linear-gradient(165deg, #6e0011 0%, #0b0a0d 70%); border-right: 3px solid var(--ink); }
-  .hero::before { content: ""; position: absolute; inset: auto -60px -80px auto; width: 380px; height: 380px; color: #a08a83; opacity: 0.35;
-    background-image: radial-gradient(currentColor 1.8px, transparent 2px); background-size: 11px 11px; border-radius: 50%;
-    -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
-  .hero > * { position: relative; z-index: 1; }
-  .hero > svg, .hero > .sticker, .hero > .keycap, .hero > .road { z-index: 0; }
-  .hero .chip { background: var(--peach); border-color: var(--peach); color: var(--ink); }
-  .hero .over { font-family: var(--f-mono); font-size: 13.5px; line-height: 1.6; letter-spacing: 0.02em; color: #e6d8d3; margin: 24px 0 14px; max-width: 44ch; }
-  .hero .over b { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: 4px; background: var(--peach); color: var(--ink); letter-spacing: 0.14em; font-size: 12px; vertical-align: 1px; }
-  /* judul chrome ala Y2K */
-  .hero h1 { font-size: clamp(50px, 7vw, 100px); line-height: 0.88; margin: 0 0 16px; max-width: 9ch;
-    background: linear-gradient(180deg, #ffffff 0%, #e8e8ec 36%, #8a8a92 50%, #f7f9fc 60%, #c2c2c8 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(4px 4px 0 var(--red)) drop-shadow(0 0 22px rgba(201,162,39, 0.25)); }
-  .hero .tag { font-family: var(--f-mono); font-size: 14px; color: #e6d8d3; margin: 0 0 24px; max-width: 34ch; }
-  .hero .tag b { color: #fff; }
-  .info { display: flex; flex-direction: column; gap: 10px; }
-  .info div { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; background: var(--paper); color: var(--ink);
-    border: 2px solid var(--ink); border-radius: 8px; padding: 7px 14px; font-weight: 600; font-size: 14.5px; box-shadow: 3px 3px 0 var(--red); }
-  .info div:empty { display: none; }
-  .info svg { width: 18px; height: 18px; flex: none; color: var(--red); }
+// ---------- Konfigurasi (atur lewat file .env) ----------
+const PORT = Number(process.env.PORT || 3000);
+const SECRET = process.env.SECRET;
+const EVENT_NAME = process.env.EVENT_NAME || "Nama Event";
+const EVENT_DATE = process.env.EVENT_DATE || "";
+const EVENT_PLACE = process.env.EVENT_PLACE || "";
+// Jam mulai acara untuk hitung mundur di halaman depan, contoh: 2026-11-14T08:00:00+07:00 (boleh kosong)
+const EVENT_START = Number.isNaN(Date.parse(process.env.EVENT_START || "")) ? null : new Date(process.env.EVENT_START).toISOString();
+const QUOTA = Number(process.env.QUOTA || 300);
+// Pendaftaran otomatis ditutup pada jam ini, contoh: 2026-11-12T17:00:00+07:00 (boleh kosong = tidak ada batas waktu)
+const REG_CLOSE_MS = Date.parse(process.env.REG_CLOSE || "");
+const regClosed = () => !Number.isNaN(REG_CLOSE_MS) && Date.now() >= REG_CLOSE_MS;
+const TIMEZONE = process.env.TIMEZONE || "Asia/Jakarta";
+// Info pembayaran (rekening, nominal). Kalau diisi, peserta wajib upload gambar bukti transfer saat daftar,
+// dan panitia bisa melihatnya di dashboard.
+const PAYMENT_INFO = (process.env.PAYMENT_INFO || "").replace(/\\n/g, "\n").trim();
+// Harga tiket dalam rupiah. Isi 0 kalau acaranya gratis (tidak perlu bukti transfer).
+const TICKET_PRICE = Math.max(0, Number(process.env.TICKET_PRICE ?? 160000) || 0);
+const PAYMENT_REQUIRED = TICKET_PRICE > 0 || Boolean(PAYMENT_INFO);
+const PROOF_MAX_BYTES = 2 * 1024 * 1024; // gambar sudah dikecilkan di browser, biasanya cuma 100-300 KB
+// Format: user:password,user2:password2
+const ACCOUNTS = Object.fromEntries(
+  (process.env.ADMIN_ACCOUNTS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      const i = s.indexOf(":");
+      return [s.slice(0, i), s.slice(i + 1)];
+    })
+);
 
-  /* hitung mundur */
-  .countdown { margin-top: 22px; }
-  .countdown > span { display: block; font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--peach); text-transform: uppercase; margin-bottom: 8px; }
-  .countdown .digits { display: flex; gap: 8px; }
-  .countdown .digits div { background: #050506; border: 2px solid #a08a83; border-radius: 8px; padding: 6px 8px 4px; min-width: 62px; text-align: center; }
-  .countdown b { display: block; font-family: var(--f-mono); font-size: 28px; line-height: 1.1; color: #fff; font-variant-numeric: tabular-nums; }
-  .countdown small { font-family: var(--f-mono); font-size: 10px; color: #b8a39c; text-transform: uppercase; letter-spacing: 0.1em; }
-  .countdown .live { font-family: var(--f-head); font-size: 26px; color: #fff; text-transform: uppercase; }
+const runDirect = require.main === module; // dijalankan pakai "npm start", bukan di Vercel
+// Di Vercel jangan crash: simpan pesannya, lalu tampilkan lewat /api supaya jelas apa yang kurang
+let CONFIG_ERROR = null;
+function fail(msg) {
+  console.error(msg);
+  if (runDirect) process.exit(1);
+  CONFIG_ERROR ||= msg;
+}
+if (!SECRET || SECRET.length < 24) fail("SECRET di .env wajib diisi, minimal 24 karakter.");
+if (!Object.keys(ACCOUNTS).length) fail("ADMIN_ACCOUNTS di .env wajib diisi, contoh: admin:passwordku");
 
-  /* garis kecepatan */
-  .speed { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .speed i { position: absolute; right: -40%; height: 2px; width: 30%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55)); animation: dash 1.6s linear infinite; }
-  .speed i:nth-child(1) { top: 14%; animation-duration: 1.3s; }
-  .speed i:nth-child(2) { top: 31%; width: 18%; animation-duration: 2.1s; animation-delay: 0.4s; }
-  .speed i:nth-child(3) { top: 47%; animation-duration: 1.7s; animation-delay: 0.9s; background: linear-gradient(90deg, transparent, rgba(201,162,39,0.6)); }
-  .speed i:nth-child(4) { top: 63%; width: 22%; animation-duration: 1.2s; animation-delay: 0.2s; }
-  .speed i:nth-child(5) { top: 78%; animation-duration: 1.9s; animation-delay: 1.1s; background: linear-gradient(90deg, transparent, rgba(217,4,22,0.8)); }
-  .speed i:nth-child(6) { top: 90%; width: 14%; animation-duration: 1.4s; animation-delay: 0.6s; }
-  @keyframes dash { to { transform: translateX(-560%); } }
+// ---------- Database ----------
+// Di komputer sendiri / VPS: file data.db. Di Vercel: Turso (isi TURSO_DATABASE_URL & TURSO_AUTH_TOKEN).
+const TURSO_URL = process.env.TURSO_DATABASE_URL;
+if (process.env.VERCEL && !TURSO_URL) fail("Di Vercel wajib isi TURSO_DATABASE_URL dan TURSO_AUTH_TOKEN.");
+const db = createClient(
+  TURSO_URL
+    ? { url: TURSO_URL, authToken: process.env.TURSO_AUTH_TOKEN }
+    : { url: "file:" + (process.env.DB_PATH || path.join(__dirname, "data.db")) }
+);
+const one = async (sql, args = []) => (await db.execute({ sql, args })).rows[0];
+const all = async (sql, args = []) => (await db.execute({ sql, args })).rows;
+const run = async (sql, args = []) => (await db.execute({ sql, args })).rowsAffected;
+const isUnique = (e, col) => /UNIQUE constraint failed/i.test(e.message) && e.message.includes("participants." + col);
 
-  /* stiker gen z */
-  .gz { position: absolute; z-index: 2; font-family: var(--f-mono); font-weight: 700; font-size: 12.5px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.03em;
-    padding: 7px 12px; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); pointer-events: none;
-    transform: rotate(var(--r)); animation: wob 3.4s ease-in-out infinite; }
-  @keyframes wob { 50% { transform: rotate(calc(var(--r) * -0.6)) scale(1.07); } }
-  .g1 { --r: 7deg; right: 22px; top: 300px; background: var(--peach); color: var(--ink); }
-  .g2 { --r: -6deg; right: 40px; top: 676px; background: #fff; color: var(--ink); animation-delay: 0.7s; }
-  .g3 { --r: 5deg; right: 28px; bottom: 150px; background: var(--red); color: #fff; animation-delay: 1.3s; }
-  .g4 { --r: -8deg; right: 36px; bottom: 40px; background: #e6d3a1; color: var(--ink); animation-delay: 2s; }
+// ---------- Kode cadangan 5 karakter (kalau QR tidak bisa discan) ----------
+// Tanpa huruf/angka yang mirip (O/0, I/1/L) supaya gampang dibaca & diketik petugas
+const SHORT_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const SHORT_LEN = 5;
+const makeShort = () => Array.from({ length: SHORT_LEN }, () => SHORT_CHARS[crypto.randomInt(SHORT_CHARS.length)]).join("");
 
-  .bottom { display: flex; flex-direction: column; gap: 18px; }
-  .slots { align-self: flex-start; background: var(--paper); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 12px; padding: 14px 18px;
-    box-shadow: 5px 5px 0 var(--peach); min-width: 280px; }
-  .slots .top { display: flex; align-items: baseline; gap: 10px; }
-  .slots b { font-family: var(--f-head); color: var(--red); font-size: 44px; line-height: 1; }
-  .slots .top span { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-  .slots .bar { height: 12px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; margin-top: 10px; overflow: hidden; }
-  .slots .bar i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #ef2a3a 8px 16px); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
-  .slots small { display: block; margin-top: 8px; color: var(--mute); font-size: 12.5px; font-weight: 600; }
-  .org { display: flex; flex-direction: column; gap: 8px; }
-  .org span { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: #b8a39c; text-transform: uppercase; }
-
-  /* Ornamen */
-  .flag { position: absolute; right: 44px; top: 34px; width: 96px; height: 96px; transform: rotate(8deg); animation: wave 3.2s ease-in-out infinite; transform-origin: 10% 100%; }
-  @keyframes wave { 50% { transform: rotate(2deg); } }
-  .circuit { position: absolute; right: 18px; top: 430px; width: 310px; height: 227px; pointer-events: none; filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.35)); }
-  .spark { position: absolute; fill: #fff; pointer-events: none; animation: twinkle 2.6s ease-in-out infinite; }
-  .sp1 { width: 34px; right: 170px; top: 60px; }
-  .sp2 { width: 18px; right: 150px; top: 112px; animation-delay: 0.8s; fill: var(--peach); }
-  .sp3 { width: 26px; right: 60px; bottom: 210px; animation-delay: 1.4s; }
-  @keyframes twinkle { 50% { transform: scale(0.7) rotate(20deg); opacity: 0.6; } }
-  /* jalan raya malam: dua lajur, dua mobil balapan beda kecepatan */
-  .road { position: absolute; left: 0; right: 0; top: 60%; height: 92px; pointer-events: none; overflow: hidden;
-    background: linear-gradient(180deg, transparent 0 6px, rgba(0,0,0,0.42) 6px calc(100% - 6px), transparent calc(100% - 6px)),
-                repeating-linear-gradient(90deg, #f2eeee 0 14px, #d90416 14px 28px) top / 100% 6px no-repeat,
-                repeating-linear-gradient(90deg, #f2eeee 0 14px, #d90416 14px 28px) bottom / 100% 6px no-repeat; }
-  .road::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px dashed rgba(242,238,238,0.45); animation: lines 0.6s linear infinite; }
-  @keyframes lines { to { transform: translateX(-12px); } }
-  .road .car { position: absolute; left: 110%; animation: drive linear infinite; }
-  .road .car svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .road .c1 { top: 4px; width: 128px; animation-duration: 4.2s; filter: drop-shadow(22px 0 0 rgba(217,4,22,0.35)); }
-  .road .c2 { top: 48px; width: 112px; animation-duration: 3.1s; animation-delay: -1.2s; filter: drop-shadow(20px 0 0 rgba(201,162,39,0.35)); }
-  @keyframes drive { from { left: 110%; } to { left: -35%; } }
-  .hero .keycap { position: absolute; right: 120px; bottom: 170px; transform: rotate(-10deg); }
-
-  /* ---------- Sisi kanan: form ---------- */
-  .formside { padding: 52px 48px; display: flex; align-items: center; justify-content: center; position: relative; }
-  .card { width: 100%; max-width: 450px; background: #fff; border: 2.5px solid var(--ink); border-radius: 16px; box-shadow: 8px 8px 0 var(--ink-2); position: relative; overflow: hidden; }
-  .card .checker { height: 14px; border-bottom: 2.5px solid var(--ink); }
-  .card .inner { padding: 26px 28px 24px; }
-  .card h2 { font-size: 34px; margin-bottom: 8px; }
-  .card h2 mark { background: var(--ink-2); color: #fff; padding: 0 8px; border-radius: 4px; box-shadow: 3px 3px 0 var(--red); }
-  .card p.mute { margin: 0 0 20px; font-weight: 500; }
-  .card .btn.block { font-size: 16px; padding: 15px 20px; margin-top: 6px; letter-spacing: 0.06em; position: relative; overflow: hidden; }
-  .card .btn.block.ready { animation: rev 0.9s ease-in-out infinite; }
-  .card .btn.block.ready::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent); animation: shine 1.6s ease-in-out infinite; }
-  @keyframes rev { 50% { transform: translate(-1px, -1px) rotate(-0.6deg); } }
-  @keyframes shine { to { left: 130%; } }
-
-  /* meteran bensin */
-  .fuel { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; font-family: var(--f-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--ink); }
-  .fuel .tank { flex: 1; height: 14px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; overflow: hidden; }
-  .fuel .tank i { display: block; height: 100%; width: 0; transition: width 0.4s cubic-bezier(.2,.8,.2,1), background 0.3s;
-    background: repeating-linear-gradient(-45deg, var(--steel) 0 8px, #bfaaa3 8px 16px); }
-  .fuel.full .tank i { background: repeating-linear-gradient(-45deg, var(--red) 0 8px, #f04555 8px 16px); }
-  .fuel b { min-width: 42px; text-align: right; }
-  .fuelmsg { display: block; font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); margin-bottom: 12px; }
-  .card .fine { font-family: var(--f-mono); font-size: 11.5px; color: var(--mute); text-align: center; margin: 14px 0 0; }
-  .num { position: absolute; top: 24px; right: 22px; font-family: var(--f-head); font-size: 15px; color: var(--steel); letter-spacing: 0.08em; }
-  .staff { display: block; text-align: center; padding: 14px 18px; border-top: 2px dashed var(--line);
-    font-family: var(--f-mono); font-size: 12.5px; color: var(--mute); text-decoration: none; background: var(--paper); }
-  .staff b { color: var(--ink); }
-  .staff:hover b { text-decoration: underline; }
-  /* kotak pembayaran */
-  .pay { border: 2.5px solid var(--ink); border-radius: 12px; overflow: hidden; margin: 6px 0 16px; box-shadow: 4px 4px 0 var(--red); }
-  .pay .price { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--ink-2); color: #fff; padding: 12px 16px; }
-  .pay .price span { font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--peach); }
-  .pay .price b { font-family: var(--f-head); font-size: 32px; line-height: 1; color: #fff; text-shadow: 2px 2px 0 var(--red); }
-  .pay .body { background: var(--mint); padding: 12px 16px 14px; font-size: 14px; }
-  .pay .rek { white-space: pre-line; color: var(--ink); font-weight: 600; margin-bottom: 10px; }
-  .pay .rek.empty { color: var(--mute); font-weight: 500; }
-  .pay ol { margin: 0 0 0 18px; padding: 0; font-size: 13px; color: var(--ink); }
-  .pay ol li { margin: 2px 0; }
-  .pay .copy { margin-bottom: 10px; }
-  .drop { position: relative; display: block; cursor: pointer; border: 2px dashed var(--steel); border-radius: 10px; background: #fbfaf7; padding: 18px 16px; text-align: center; transition: border-color 0.15s, background 0.15s; margin: 0; font-family: var(--f-body); font-weight: 500; text-transform: none; letter-spacing: 0; }
-  .drop:hover, .drop:focus-within { border-color: var(--ink); background: var(--mint); }
-  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  .drop-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--mute); }
-  .drop-empty svg { width: 30px; height: 30px; color: var(--ink-2); margin-bottom: 2px; }
-  .drop-empty b { color: var(--ink); font-size: 14px; }
-  .drop-empty small, .drop-done small { font-size: 12.5px; color: var(--mute); display: block; }
-  .drop-done { display: flex; align-items: center; gap: 14px; text-align: left; }
-  .drop-done img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; border: 2px solid var(--ink); }
-  .drop-done b { display: block; color: var(--ink); font-size: 14px; word-break: break-all; }
-  .closed { text-align: center; padding: 6px 0 4px; }
-  .closed .finish { height: 22px; margin: 0 -4px 22px; border: 2px solid var(--ink); border-radius: 6px;
-    background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 22px 22px; animation: finishmove 1.2s linear infinite; }
-  @keyframes finishmove { to { background-position: 22px 0; } }
-  .closed .stamp { display: inline-block; font-family: var(--f-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.22em;
-    color: var(--red); border: 3px solid var(--red); border-radius: 6px; padding: 4px 14px; margin-bottom: 16px;
-    transform: rotate(-4deg); animation: stampin 0.5s cubic-bezier(.2,1.6,.4,1) both; }
-  @keyframes stampin { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } }
-  .closed .emoji { font-size: 54px; line-height: 1; margin-bottom: 8px; display: block; animation: wob2 2.4s ease-in-out infinite; }
-  @keyframes wob2 { 50% { transform: translateY(-5px) rotate(-6deg); } }
-  .closed h2 { font-size: 34px; margin: 6px 0 10px; }
-  .closed h2 mark { background: var(--ink-2); color: #fff; padding: 0 8px; border-radius: 4px; box-shadow: 3px 3px 0 var(--red); }
-  .closed p.mute { margin: 0 auto 18px; max-width: 34ch; }
-  .closed .cinfo { display: flex; flex-direction: column; gap: 6px; align-items: center; margin: 0 0 18px;
-    font-family: var(--f-mono); font-size: 13px; color: var(--ink); }
-  .closed .cinfo span { display: inline-block; background: var(--peach); border: 2px solid var(--ink); border-radius: 6px; padding: 4px 12px; box-shadow: 3px 3px 0 var(--ink); }
-  .closed .note { margin: 0; font-size: 13px; font-weight: 500; border-top: 2px dashed var(--ink); padding-top: 14px; }
-
-  /* pita "caution tape" */
-  .tapes { position: relative; height: 128px; overflow: hidden; border-top: 3px solid var(--ink); }
-  .tape { position: absolute; left: -5%; width: 110%; white-space: nowrap; overflow: hidden; border-block: 3px solid var(--ink);
-    font-family: var(--f-head); font-weight: 700; font-size: 22px; text-transform: uppercase; }
-  .tape .run { display: inline-flex; padding: 7px 0; animation: run 28s linear infinite; }
-  .tape span { padding: 0 16px; }
-  .tape span::after { content: "🏁"; margin-left: 32px; }
-  .t1 { top: 22px; background: var(--red); color: #fff; transform: rotate(-2.5deg); }
-  .t2 { top: 50px; background: var(--peach); color: var(--ink); transform: rotate(2deg); }
-  .t2 .run { animation-direction: reverse; }
-  footer { text-align: center; padding: 26px 16px 40px; font-family: var(--f-mono); font-size: 17px; line-height: 1.6; color: var(--ink); }
-  footer b { font-family: var(--f-head); font-size: 1.35em; text-transform: uppercase; color: var(--red); letter-spacing: 0.02em; }
-  @media (max-width: 600px) { footer { font-size: 14.5px; } }
-
-  /* intro lampu start F1 */
-  .intro { position: fixed; inset: 0; z-index: 100; background: radial-gradient(ellipse at 50% 40%, #6e0011, #050506 70%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 20px; cursor: pointer;
-    transition: transform 0.6s cubic-bezier(.7,0,.3,1); }
-  .intro.go { transform: translateY(-105%); }
-  .lights { display: flex; gap: clamp(8px, 2vw, 16px); background: #050608; padding: 14px 18px; border-radius: 14px; border: 3px solid #2a2f40; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-  .pod { display: flex; flex-direction: column; gap: 10px; background: #12141c; padding: 8px; border-radius: 10px; }
-  .pod i { width: clamp(30px, 8vw, 58px); aspect-ratio: 1; border-radius: 50%; background: #2a1216; border: 3px solid #0a0a0a; transition: background 0.06s, box-shadow 0.06s; }
-  .pod.on i { background: #ff2338; box-shadow: 0 0 26px 6px rgba(255, 35, 56, 0.65); }
-  .intro p { font-family: var(--f-head); font-weight: 700; color: #fff; font-size: clamp(30px, 7vw, 64px); text-transform: uppercase; margin: 0; min-height: 1.1em; text-align: center; line-height: 1; }
-  .intro p.out { color: transparent; -webkit-text-fill-color: transparent; background: linear-gradient(180deg, #fff, #c9a227 55%, #d90416); -webkit-background-clip: text; background-clip: text;
-    animation: pop 0.4s cubic-bezier(.2,1.6,.4,1); }
-  @keyframes pop { from { transform: scale(0.4); } }
-  .intro small { font-family: var(--f-mono); color: #a08a83; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; }
-
-  /* mobil ngebut setelah daftar */
-  .zoom { position: fixed; inset: 0; z-index: 110; pointer-events: none; overflow: hidden;
-    background: repeating-linear-gradient(0deg, transparent 0 34px, rgba(255,255,255,0.0) 34px 36px); animation: flash 1.05s ease-in forwards; }
-  .zoom svg { width: 100%; height: auto; display: block; }
-  .zoom span { position: absolute; top: 56%; left: 105%; width: clamp(260px, 42vw, 520px); line-height: 0; transform: translateY(-50%);
-    filter: drop-shadow(40px 0 0 rgba(201,162,39,0.45)) drop-shadow(80px 0 0 rgba(217,4,22,0.3)); animation: zoom 1s cubic-bezier(.55,0,.35,1) forwards; }
-  .zoom b { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--f-head); font-size: clamp(56px, 12vw, 130px); color: var(--red);
-    -webkit-text-stroke: 3px var(--ink); text-shadow: 6px 6px 0 var(--ink); animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); white-space: nowrap; }
-  @keyframes zoom { to { left: -70%; } }
-  @keyframes flash { 70% { background-color: transparent; } to { background-color: rgba(254,246,235,0.95); } }
-
-  /* jejak api di kursor */
-  .trail { position: fixed; z-index: 90; pointer-events: none; font-size: 16px; transform: translate(-50%, -50%); animation: puff 0.7s ease-out forwards; }
-  @keyframes puff { to { opacity: 0; transform: translate(-50%, -160%) scale(0.4) rotate(40deg); } }
-
-  @media (max-width: 900px) {
-    .hero .over { max-width: none; }
-    .wrap { grid-template-columns: 1fr; min-height: 0; }
-    .hero { padding: 30px 20px 30px; border-right: 0; border-bottom: 3px solid var(--ink); }
-    .hero h1 { max-width: none; padding-right: 70px; }
-    .flag { width: 64px; height: 64px; right: 18px; top: 22px; }
-    .circuit { width: 190px; height: 139px; right: -34px; top: 300px; opacity: 0.85; }
-    .hero { padding-bottom: 104px !important; }
-    .road { top: auto; bottom: 8px; height: 80px; }
-    .road .c1 { width: 104px; } .road .c2 { top: 42px; width: 92px; }
-    .sp1 { right: 92px; top: 30px; width: 24px; } .sp2 { display: none; }
-    .sp3, .hero .keycap, .g2, .g3, .g4 { display: none; }
-    .g1 { top: auto; bottom: 236px; right: 14px; font-size: 11px; }
-    .countdown .digits div { min-width: 0; flex: 1; }
-    .countdown b { font-size: 24px; }
-    .tape { font-size: 18px; }
-    .slots { min-width: 0; width: 100%; }
-    .logos { height: 54px; }
-    .formside { padding: 36px 16px 52px; }
-    .card .inner { padding: 22px 18px 20px; }
-    .card h2 { font-size: 29px; }
+async function initDb() {
+  if (!TURSO_URL) {
+    await db.execute("PRAGMA journal_mode = WAL");
+    await db.execute("PRAGMA busy_timeout = 5000");
   }
-</style>
-</head>
-<body>
-<div class="intro" id="intro" aria-hidden="true">
-  <div class="lights"><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div></div>
-  <p id="introText"></p>
-  <small>Ketuk untuk skip</small>
-</div>
-<script>
-  // Intro cuma sekali per sesi, dan dilewati kalau pengguna minta animasi dikurangi
-  (function () {
-    let seen = false;
-    try { seen = sessionStorage.getItem("intro"); sessionStorage.setItem("intro", "1"); } catch (e) {}
-    if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) document.getElementById("intro").remove();
-  })();
-</script>
-<div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
-<div class="palette" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS participants (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      email       TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      phone       TEXT NOT NULL,
+      institution TEXT,
+      created_at  TEXT NOT NULL,
+      scanned_at  TEXT,
+      scanned_by  TEXT,
+      short_code  TEXT
+    )
+  `);
+  // Database lama belum punya kolom kode cadangan -> tambahkan & isi otomatis
+  if (!(await all("PRAGMA table_info(participants)")).some((c) => c.name === "short_code")) {
+    await db.execute("ALTER TABLE participants ADD COLUMN short_code TEXT");
+  }
+  await db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_short_code ON participants(short_code)");
+  // Gambar bukti transfer disimpan terpisah supaya daftar peserta tetap ringan
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS proofs (
+      participant_id TEXT PRIMARY KEY,
+      mime           TEXT NOT NULL,
+      data           BLOB NOT NULL,
+      created_at     TEXT NOT NULL
+    )
+  `);
+  // Status pembayaran: pending (bukti belum dicek), paid (lunas), rejected (ditolak). Kosong = tidak perlu bayar.
+  const cols = (await all("PRAGMA table_info(participants)")).map((c) => c.name);
+  for (const c of ["pay_status", "pay_by", "pay_at", "angkatan"]) {
+    if (!cols.includes(c)) await db.execute(`ALTER TABLE participants ADD COLUMN ${c} TEXT`);
+  }
+  // Peserta lama yang sudah upload bukti tapi belum punya status -> menunggu dicek
+  await db.execute("UPDATE participants SET pay_status = 'pending' WHERE pay_status IS NULL AND id IN (SELECT participant_id FROM proofs)");
+  for (const { id } of await all("SELECT id FROM participants WHERE short_code IS NULL")) {
+    for (;;) {
+      try { await run("UPDATE participants SET short_code = ? WHERE id = ?", [makeShort(), id]); break; }
+      catch (e) { if (!isUnique(e, "short_code")) throw e; }
+    }
+  }
+}
+// Disiapkan sekali; kalau gagal (misal koneksi Turso putus), dicoba lagi di request berikutnya
+let ready;
+const dbReady = () => (ready ??= initDb().catch((e) => { ready = undefined; throw e; }));
 
-<div class="wrap">
-  <aside class="hero">
-    <div class="speed" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div>
-      <span class="chip">🔥 Pendaftaran dibuka</span>
-      <p class="over"><b>ECLIPSE</b> Where every mile tells a story and every journey creates a legacy</p>
-      <h1 id="eventName">&nbsp;</h1>
-      <div class="info">
-        <div id="eventDate"></div>
-        <div id="eventPlace"></div>
-        <div id="eventPrice"></div>
-      </div>
-      <div class="countdown hidden" id="countdown">
-        <span>Lights out in</span>
-        <div class="digits" id="cdDigits">
-          <div><b id="cdD">00</b><small>hari</small></div>
-          <div><b id="cdH">00</b><small>jam</small></div>
-          <div><b id="cdM">00</b><small>menit</small></div>
-          <div><b id="cdS">00</b><small>detik</small></div>
-        </div>
-      </div>
-    </div>
-    <div class="bottom">
-      <div class="slots">
-        <div class="top"><b id="remaining">–</b><span>kursi tersisa</span></div>
-        <div class="bar"><i id="fill"></i></div>
-        <small id="slotNote">Kuota terbatas, siapa cepat dia dapat.</small>
-      </div>
-      <div class="org"><span>Diselenggarakan oleh</span><img class="logos" src="/logos.png" alt="Logo penyelenggara"></div>
-    </div>
-
-    <svg class="flag" viewBox="0 0 64 64" aria-hidden="true">
-      <defs><pattern id="ck" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#fff"/><rect width="4" height="4" fill="#0b0a0d"/><rect x="4" y="4" width="4" height="4" fill="#0b0a0d"/></pattern></defs>
-      <rect x="8" y="6" width="4" height="56" rx="2" fill="#fff"/>
-      <path d="M12 8c10-4 16 4 26 0s14-2 22 0v28c-8-2-12-4-22 0s-16-4-26 0z" fill="url(#ck)" stroke="#fff" stroke-width="2"/>
-    </svg>
-    <svg class="circuit" viewBox="-10 -10 300 220" fill="none" aria-hidden="true">
-      <defs><path id="track" d="M30 150c-20-30 0-70 40-70h60c25 0 30-40 60-40s60 20 50 60-50 30-60 60-30 30-60 20-30-20-60-10-30 10-40-20z"/></defs>
-      <use href="#track" stroke="#f2eeee" stroke-width="24" stroke-linejoin="round"/>
-      <use href="#track" stroke="#d90416" stroke-width="24" stroke-linejoin="round" stroke-dasharray="7 7"/>
-      <use href="#track" stroke="#1a1a1f" stroke-width="17" stroke-linejoin="round"/>
-      <use href="#track" stroke="rgba(242,238,238,.55)" stroke-width="1" stroke-dasharray="5 5"/>
-      <g transform="translate(100 80)"><rect x="-2" y="-8.5" width="4" height="17" fill="#fff"/><rect x="-2" y="-8.5" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="-5.67" width="2" height="2.83" fill="#0b0a0d"/><rect x="-2" y="-2.83" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="0" width="2" height="2.83" fill="#0b0a0d"/><rect x="-2" y="2.83" width="2" height="2.83" fill="#0b0a0d"/><rect x="0" y="5.67" width="2" height="2.83" fill="#0b0a0d"/></g>
-      <g id="carRed"><g transform="scale(1.35)"><rect x="-10" y="-6" width="3" height="12" rx="1" fill="#0b0a0d"/><rect x="-8" y="-6.5" width="4.5" height="3" rx="1" fill="#111"/><rect x="-8" y="3.5" width="4.5" height="3" rx="1" fill="#111"/><path d="M-8 -2.6H3l7 1.4v2.4l-7 1.4H-8z" fill="#d90416" stroke="#0b0a0d" stroke-width=".8"/><circle r="1.7" fill="#c9a227" stroke="#0b0a0d" stroke-width=".6"/><rect x="3" y="-6" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="3" y="3.2" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="9.5" y="-5.5" width="2" height="11" rx=".8" fill="#0b0a0d"/><circle cx="12.5" cy="-2" r="1.1" fill="#fff6c8"/><circle cx="12.5" cy="2" r="1.1" fill="#fff6c8"/></g></g>
-      <g id="carGold"><g transform="scale(1.35)"><rect x="-10" y="-6" width="3" height="12" rx="1" fill="#0b0a0d"/><rect x="-8" y="-6.5" width="4.5" height="3" rx="1" fill="#111"/><rect x="-8" y="3.5" width="4.5" height="3" rx="1" fill="#111"/><path d="M-8 -2.6H3l7 1.4v2.4l-7 1.4H-8z" fill="#c9a227" stroke="#0b0a0d" stroke-width=".8"/><circle r="1.7" fill="#f2eeee" stroke="#0b0a0d" stroke-width=".6"/><rect x="3" y="-6" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="3" y="3.2" width="3.5" height="2.8" rx="1" fill="#111"/><rect x="9.5" y="-5.5" width="2" height="11" rx=".8" fill="#0b0a0d"/><circle cx="12.5" cy="-2" r="1.1" fill="#fff6c8"/><circle cx="12.5" cy="2" r="1.1" fill="#fff6c8"/></g></g>
-    </svg>
-    <div class="road" aria-hidden="true">
-      <div class="car c1"><svg viewBox="0 0 240 84"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#f2eeee" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#d90416" stroke-width="5"/><path d="M80 43 204 37" stroke="#c9a227" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#c9a227" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="158" y="37" font-family="Space Mono, monospace" font-weight="700" font-size="14" fill="#d90416">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#c2c2c8"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#c2c2c8"/><path d="M2 50 -40 44v18z" fill="rgba(255,246,200,.35)"/></svg></div>
-      <div class="car c2"><svg viewBox="0 0 240 84"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#c9a227" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#0b0a0d" stroke-width="5"/><path d="M80 43 204 37" stroke="#f2eeee" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#f2eeee" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="158" y="37" font-family="Space Mono, monospace" font-weight="700" font-size="14" fill="#0b0a0d">14</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#c2c2c8"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#c2c2c8"/><path d="M2 50 -40 44v18z" fill="rgba(255,246,200,.35)"/></svg></div>
-    </div>
-    <svg class="spark sp1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
-    <svg class="spark sp2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
-    <svg class="spark sp3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12z"/></svg>
-    <span class="keycap" aria-hidden="true">F1</span>
-    <span class="gz g1" aria-hidden="true">no cap 🧢 seru parah</span>
-    <span class="gz g2" aria-hidden="true">main character energy ✨</span>
-    <span class="gz g3" aria-hidden="true">ga dateng = rugi 💀</span>
-    <span class="gz g4" aria-hidden="true">P1 vibes only 🏆</span>
-  </aside>
-
-  <main class="formside">
-    <div class="card">
-      <div class="checker" aria-hidden="true"></div>
-      <span class="num" aria-hidden="true">#2026</span>
-      <div class="inner">
-        <div id="formBox">
-          <h2>Gas <mark>daftar!</mark> 🏎️</h2>
-          <p class="mute">1 menit doang, tiket QR langsung jadi. No ribet, no drama.</p>
-          <div id="err" class="alert err hidden"></div>
-          <form id="form" novalidate>
-            <div class="field"><label for="name">Nama lengkap</label><input id="name" type="text" autocomplete="name" placeholder="Nama lengkap sesuai KTM / KTP" required></div>
-            <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="kamu@email.com" required></div>
-            <div class="field"><label for="phone">Nomor HP / WhatsApp</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx (WA aktif ya)" required></div>
-            <div class="field"><label for="institution">Institusi</label><input id="institution" type="text" placeholder="Contoh: FKG Unissula" required></div>
-            <div class="field"><label for="angkatan">Angkatan</label><input id="angkatan" type="text" inputmode="numeric" maxlength="20" placeholder="Contoh: 2023" required></div>
-            <div id="payBox" class="hidden">
-              <div class="pay">
-                <div class="price"><span>💸 Harga tiket</span><b id="payPrice">Rp0</b></div>
-                <div class="body">
-                  <div class="rek" id="payInfo"></div>
-                  <button type="button" class="btn ghost small copy" id="payCopy">📋 Salin no. rekening</button>
-                  <ol>
-                    <li>Transfer <b id="payPrice2">Rp0</b> ke rekening di atas</li>
-                    <li>Screenshot / foto bukti transfernya</li>
-                    <li>Upload di bawah, tiket langsung jadi 🎟️</li>
-                  </ol>
-                </div>
-              </div>
-              <div class="field">
-                <label for="proof">Upload bukti transfer 📸</label>
-                <label class="drop" id="drop" for="proof">
-                  <input id="proof" type="file" accept="image/*">
-                  <span class="drop-empty" id="dropEmpty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-                    <b>Pilih foto / screenshot bukti transfer</b>
-                    <small>JPG atau PNG. Pastikan nominal & tanggal terlihat jelas.</small>
-                  </span>
-                  <span class="drop-done hidden" id="dropDone">
-                    <img id="proofPreview" alt="Pratinjau bukti transfer">
-                    <span><b id="proofName"></b><small>Ketuk untuk ganti gambar</small></span>
-                  </span>
-                </label>
-              </div>
-            </div>
-            <div class="fuel" id="fuelBox"><span>⛽ Bensin</span><div class="tank"><i id="fuel"></i></div><b id="fuelPct">0%</b></div>
-            <small class="fuelmsg" id="fuelMsg">Tangki masih kosong, isi datanya dulu bestie</small>
-            <button class="btn gold block" id="submit" type="submit">Gas daftar 🏎️💨</button>
-          </form>
-          <p class="fine">Satu email = satu tiket. Jangan curang ya 👀</p>
-        </div>
-        <div id="closedBox" class="closed hidden">
-          <div class="finish" aria-hidden="true"></div>
-          <div class="stamp" id="closedStamp">CLOSED</div>
-          <span class="emoji" id="closedEmoji">🏁</span>
-          <h2 id="closedTitle">Pendaftaran <mark>ditutup!</mark></h2>
-          <p class="mute" id="closedText">Garis finish sudah dilewati. Thank you for the hype, sampai ketemu di race berikutnya!</p>
-          <div class="cinfo"><span id="closedDate"></span><span id="closedPlace"></span></div>
-          <p class="note">Udah daftar? Tiket QR kamu aman. Simpan baik-baik dan tunjukkan di pintu masuk 🎟️</p>
-        </div>
-      </div>
-      <a class="staff" href="/panitia">Kamu panitia? <b>Masuk di sini →</b></a>
-    </div>
-  </main>
-</div>
-
-<div class="tapes" aria-hidden="true">
-  <div class="tape t1"><div class="run" id="tape1"></div></div>
-  <div class="tape t2"><div class="run" id="tape2"></div></div>
-</div>
-<footer>Dibuat dengan 🔥 oleh <b>Nayaka Ihsan Muttaqin</b><br>tiket kamu, aturan kamu, gas pol</footer>
-
-<script>
-const $ = (id) => document.getElementById(id);
-const ICON = {
-  date: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
-  price: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/><path d="M14 5v14" stroke-dasharray="2 2.5"/></svg>',
-  place: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+const q = {
+  count: async () => (await one("SELECT COUNT(*) AS n FROM participants")).n,
+  countScanned: async () => (await one("SELECT COUNT(*) AS n FROM participants WHERE scanned_at IS NOT NULL")).n,
+  byId: (id) => one("SELECT * FROM participants WHERE id = ?", [id]),
+  byShort: (s) => one("SELECT id FROM participants WHERE short_code = ?", [s]),
+  byEmail: (email) => one("SELECT id FROM participants WHERE email = ?", [email]),
+  all: () => all(`SELECT p.*, EXISTS (SELECT 1 FROM proofs WHERE participant_id = p.id) AS has_proof
+                  FROM participants p ORDER BY p.created_at DESC, p.rowid DESC`),
+  // Hanya berhasil kalau tiket belum pernah discan -> aman dari scan dobel bersamaan
+  markScanned: (at, by, id) => run("UPDATE participants SET scanned_at = ?, scanned_by = ? WHERE id = ? AND scanned_at IS NULL", [at, by, id]),
+  setScanned: (at, by, id) => run("UPDATE participants SET scanned_at = ?, scanned_by = ? WHERE id = ?", [at, by, id]),
+  resetOne: (id) => run("UPDATE participants SET scanned_at = NULL, scanned_by = NULL WHERE id = ?", [id]),
+  resetAll: () => run("UPDATE participants SET scanned_at = NULL, scanned_by = NULL"),
+  setPay: (status, by, at, id) => run("UPDATE participants SET pay_status = ?, pay_by = ?, pay_at = ? WHERE id = ?", [status, by, at, id]),
+  remove: async (id) => {
+    await db.batch([
+      { sql: "DELETE FROM proofs WHERE participant_id = ?", args: [id] },
+      { sql: "DELETE FROM participants WHERE id = ?", args: [id] },
+    ], "write");
+  },
+  proof: (id) => one("SELECT mime, data FROM proofs WHERE participant_id = ?", [id]),
 };
-function infoLine(el, icon, text) {
-  el.textContent = "";
-  if (!text) return;
-  el.innerHTML = icon;
-  el.append(text);
-}
 
-fetch("/api/event").then(r => r.json()).then(e => {
-  document.title = "Daftar · " + e.name;
-  $("eventName").textContent = e.name;
-  infoLine($("eventDate"), ICON.date, e.date);
-  infoLine($("eventPlace"), ICON.place, e.place);
-  $("remaining").textContent = e.remaining;
-  const filled = e.quota ? Math.round(((e.quota - e.remaining) / e.quota) * 100) : 0;
-  requestAnimationFrame(() => ($("fill").style.width = Math.max(filled, 2) + "%"));
-  $("slotNote").textContent = e.remaining <= 0 ? "Sold out 😭"
-    : filled >= 80 ? `🔥 ${filled}% udah keisi, buruan sebelum kehabisan!`
-    : "Kuota terbatas, first come first served 🏁";
-  if (e.start) countdown(Date.parse(e.start));
-
-  const items = [e.name, "Night Ride", "Eclipse", "Through the night, beyond the horizon", e.date, "Tiket QR instan", e.place, "Kuota terbatas"].filter(Boolean);
-  const html = items.map(t => `<span>${t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
-$("marquee").innerHTML = html + html + html + html;
-  const tape = (words) => { const h = words.map(t => `<span>${t}</span>`).join(""); return h + h + h + h; };
-  $("tape1").innerHTML = tape(["Night ride", "Gas pol", "No cap", "Eclipse mode", "Full throttle"]);
-  $("tape2").innerHTML = tape(["Through the night", "Beyond the horizon", "Jangan sampai FOMO", "Tiket QR instan"]);
-
-  // Tutup pendaftaran: karena kuota habis, atau karena waktunya sudah lewat
-  const showClosed = (soldOut) => {
-    if (soldOut) {
-      $("closedStamp").textContent = "SOLD OUT";
-      $("closedEmoji").textContent = "😭";
-      $("closedTitle").innerHTML = "Sold <mark>out!</mark>";
-      $("closedText").textContent = "Kursinya udah full semua. Thank you for the hype, sampai ketemu di race berikutnya!";
-    } else {
-      $("remaining").textContent = "TUTUP";
-      $("slotNote").textContent = "Pendaftaran sudah ditutup 🏁";
-    }
-    $("closedDate").textContent = e.date ? "📅 " + e.date : "";
-    $("closedDate").hidden = !e.date;
-    $("closedPlace").textContent = e.place ? "📍 " + e.place : "";
-    $("closedPlace").hidden = !e.place;
-    $("formBox").classList.add("hidden");
-    $("closedBox").classList.remove("hidden");
-  };
-  if (e.remaining <= 0) showClosed(true);
-  else if (e.closed) showClosed(false);
-  else if (e.closeAt) {
-    // Halaman yang lagi terbuka ikut tertutup sendiri saat waktunya habis
-    const left = Date.parse(e.closeAt) - Date.now();
-    if (left > 0 && left < 2147483647) setTimeout(() => showClosed(false), left);
-    const jam = new Date(e.closeAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).replace(":", ".");
-    const tgl = new Date(e.closeAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", timeZone: "Asia/Jakarta" });
-    if (e.remaining > 0 && filled < 80) $("slotNote").textContent = `Pendaftaran ditutup ${tgl} pukul ${jam} WIB ⏰`;
-  }
-  if (e.payment && e.payment.required) {
-    payRequired = true;
-    const price = "Rp" + Number(e.payment.price || 0).toLocaleString("id-ID");
-    $("payPrice").textContent = $("payPrice2").textContent = price;
-    if (e.payment.price) infoLine($("eventPrice"), ICON.price, "Tiket " + price);
-    if (e.payment.info) $("payInfo").textContent = e.payment.info;
-    else { $("payInfo").textContent = "Nomor rekening belum diisi panitia. Hubungi panitia dulu ya sebelum transfer."; $("payInfo").classList.add("empty"); $("payCopy").classList.add("hidden"); }
-    // Yang disalin cukup nomor rekeningnya (deretan angka terpanjang), biar langsung bisa ditempel di m-banking
-    const nums = e.payment.info.match(/\d[\d\s.-]{5,}\d/g) || [];
-    const rek = nums.length ? nums.sort((a, b) => b.length - a.length)[0].replace(/\D/g, "") : e.payment.info;
-    $("payCopy").onclick = async () => {
-      try { await navigator.clipboard.writeText(rek); $("payCopy").textContent = "✅ Tersalin: " + rek; }
-      catch { prompt("Salin nomor rekening ini:", rek); }
-      setTimeout(() => ($("payCopy").textContent = "📋 Salin no. rekening"), 2500);
-    };
-    $("payBox").classList.remove("hidden");
-  }
+// Waktu lokal acara, format "2026-11-14 19:05:12"
+const fmt = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
 });
+const now = () => fmt.format(new Date());
 
-// ---------- Mobil muter sirkuit ----------
-(function () {
-  const ns = "http://www.w3.org/2000/svg";
-  const still = { carRed: "translate(170 44)", carGold: "translate(70 80) rotate(180)" };
-  [["carRed", "0s"], ["carGold", "-2.4s"]].forEach(([id, begin]) => {
-    const g = document.getElementById(id);
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return g.setAttribute("transform", still[id]);
-    const m = document.createElementNS(ns, "animateMotion");
-    m.setAttribute("dur", id === "carRed" ? "5.5s" : "6.2s");
-    m.setAttribute("repeatCount", "indefinite");
-    m.setAttribute("rotate", "auto");
-    m.setAttribute("begin", begin);
-    const p = document.createElementNS(ns, "mpath");
-    p.setAttribute("href", "#track");
-    m.appendChild(p); g.appendChild(m);
-  });
-})();
-
-// ---------- Hitung mundur ----------
-function countdown(at) {
-  const pad = (n) => String(n).padStart(2, "0");
-  const tick = () => {
-    const ms = at - Date.now();
-    if (ms <= 0) {
-      $("cdDigits").innerHTML = '<div class="live">🏁 Race day! Lagi berlangsung</div>';
-      return clearInterval(t);
+// Cek kuota & simpan dalam satu perintah supaya kuota tidak jebol saat banyak yang daftar bersamaan
+const DUPLICATE = { error: "Email ini sudah terdaftar. Hubungi panitia kalau tiketmu hilang.", status: 409 };
+async function registerTx(p, proof) {
+  if (await q.byEmail(p.email)) return DUPLICATE;
+  for (;;) {
+    p.short_code = makeShort();
+    try {
+      // Peserta & bukti transfer disimpan bersamaan: dua-duanya masuk, atau tidak sama sekali
+      const steps = [{
+        sql: `INSERT INTO participants (id, short_code, name, email, phone, institution, angkatan, created_at, pay_status)
+              SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM participants) < ?`,
+        args: [p.id, p.short_code, p.name, p.email, p.phone, p.institution, p.angkatan, p.created_at, proof ? "pending" : null, QUOTA],
+      }];
+      if (proof) steps.push({
+        sql: "INSERT INTO proofs (participant_id, mime, data, created_at) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM participants WHERE id = ?)",
+        args: [p.id, proof.mime, proof.data, p.created_at, p.id],
+      });
+      const [added] = await db.batch(steps, "write");
+      return added.rowsAffected ? { ok: true } : { error: "Kuota pendaftaran sudah penuh.", status: 409 };
+    } catch (e) {
+      if (isUnique(e, "email")) return DUPLICATE;
+      if (!isUnique(e, "short_code")) throw e; // kode cadangan kebetulan sama -> coba kode lain
     }
-    const s = Math.floor(ms / 1000);
-    $("cdD").textContent = pad(Math.floor(s / 86400));
-    $("cdH").textContent = pad(Math.floor(s / 3600) % 24);
-    $("cdM").textContent = pad(Math.floor(s / 60) % 60);
-    $("cdS").textContent = pad(s % 60);
-  };
-  const t = setInterval(tick, 1000);
-  tick();
-  $("countdown").classList.remove("hidden");
+  }
 }
 
-// ---------- Intro lampu start ----------
-const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-(function intro() {
-  const el = $("intro");
-  if (!el) return;
-  const pods = el.querySelectorAll(".pod"), step = 380;
-  let done = false;
-  const close = () => {
-    if (done) return; done = true;
-    el.classList.add("go");
-    setTimeout(() => el.remove(), 650);
-  };
-  pods.forEach((p, i) => setTimeout(() => p.classList.add("on"), 350 + i * step));
-  setTimeout(() => {
-    pods.forEach(p => p.classList.remove("on"));
-    $("introText").textContent = "Lights out! 🏁";
-    $("introText").classList.add("out");
-  }, 350 + pods.length * step + 450);
-  setTimeout(close, 350 + pods.length * step + 1400);
-  el.addEventListener("click", close);
-})();
-
-// ---------- Jejak api di kursor (desktop saja) ----------
-if (!calm && matchMedia("(pointer: fine)").matches) {
-  let last = 0;
-  const bits = ["🔥", "💨", "✨", "🏁"];
-  document.addEventListener("pointermove", (e) => {
-    const now = performance.now();
-    if (now - last < 55) return;
-    last = now;
-    const s = document.createElement("span");
-    s.className = "trail";
-    s.textContent = bits[(Math.random() * bits.length) | 0];
-    s.style.left = e.clientX + "px"; s.style.top = e.clientY + "px";
-    document.body.appendChild(s);
-    setTimeout(() => s.remove(), 700);
-  });
+// ---------- Kode tiket ----------
+const sign = (id) => crypto.createHmac("sha256", SECRET).update(id).digest("base64url").slice(0, 16);
+const makeCode = (id) => `${id}.${sign(id)}`;
+function parseCode(code) {
+  const [id, sig] = String(code || "").trim().split(".");
+  if (!id || !sig) return null;
+  const expected = Buffer.from(sign(id));
+  const given = Buffer.from(sig);
+  if (expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) return null;
+  return id;
 }
 
-// ---------- Meteran bensin: makin lengkap form, makin penuh ----------
-function fuel() {
-  const checks = [
-    $("name").value.trim().length >= 3,
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("email").value.trim()),
-    $("phone").value.replace(/\D/g, "").length >= 9,
-    $("institution").value.trim().length >= 2,
-    $("angkatan").value.trim().length >= 1,
-  ];
-  if (payRequired) checks.push(Boolean(proofData));
-  const n = checks.filter(Boolean).length, pct = Math.round((n / checks.length) * 100);
-  $("fuel").style.width = pct + "%";
-  $("fuelPct").textContent = pct + "%";
-  $("fuelBox").classList.toggle("full", pct === 100);
-  $("submit").classList.toggle("ready", pct === 100 && !calm);
-  $("fuelMsg").textContent = pct === 100 ? "FULL TANK! Siap gas 🏎️💨"
-    : pct >= 60 ? "Dikit lagi, hampir full 🔥"
-    : pct > 0 ? "Oke oke, lanjut isi..."
-    : "Tangki masih kosong, isi datanya dulu bestie";
-}
-["name", "email", "phone", "institution", "angkatan"].forEach(id => $(id).addEventListener("input", fuel));
+// ---------- App ----------
+const app = express();
+app.set("trust proxy", 1);
+// Pendaftaran boleh lebih besar karena membawa gambar bukti transfer
+const smallJson = express.json({ limit: "20kb" });
+const bigJson = express.json({ limit: "4mb" });
+app.use((req, res, next) => (req.path === "/api/register" ? bigJson : smallJson)(req, res, next));
+app.use(
+  cookieSession({
+    name: "sesi",
+    keys: [SECRET || "belum-diisi"],
+    maxAge: 12 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+);
+app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 
-// Mobil ngebut lewat layar sebelum pindah ke halaman tiket
-const CAR = `<svg viewBox="0 0 240 84" aria-hidden="true"><rect x="192" y="8" width="38" height="9" rx="2" fill="#0b0a0d"/><rect x="204" y="14" width="8" height="30" fill="#0b0a0d"/><path d="M8 54 58 47 94 35 128 31 150 22h22l8 11 26 3 6 18z" fill="#d90416" stroke="#0b0a0d" stroke-width="3" stroke-linejoin="round"/><path d="M66 47 204 41" stroke="#fff" stroke-width="4"/><path d="M80 44 204 38" stroke="#c9a227" stroke-width="2"/><circle cx="141" cy="25" r="8" fill="#c9a227" stroke="#0b0a0d" stroke-width="2.5"/><path d="M126 31q12-16 30-8" fill="none" stroke="#0b0a0d" stroke-width="4" stroke-linecap="round"/><text x="160" y="36" font-family="Space Mono, monospace" font-weight="700" font-size="13" fill="#fff">26</text><rect x="2" y="54" width="44" height="7" rx="2" fill="#0b0a0d"/><rect x="34" y="53" width="176" height="6" fill="#0b0a0d"/><circle cx="50" cy="58" r="17" fill="#0b0a0d"/><circle cx="50" cy="58" r="7" fill="#a08a83"/><circle cx="184" cy="56" r="20" fill="#0b0a0d"/><circle cx="184" cy="56" r="8" fill="#a08a83"/></svg>`;
-function zoom() {
-  if (calm) return Promise.resolve();
-  const z = document.createElement("div");
-  z.className = "zoom";
-  z.innerHTML = "<b>WUSHHH!</b><span>" + CAR + "</span>";
-  document.body.appendChild(z);
-  return new Promise(ok => setTimeout(ok, 1050));
-}
-
-// ---------- Bukti transfer ----------
-// Foto dari kamera HP bisa 5-10 MB, jadi dikecilkan dulu di browser (maks 1600px, JPEG) sebelum dikirim
-let payRequired = false, proofData = null;
-async function shrink(file) {
-  const img = await new Promise((ok, no) => {
-    const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("File ini bukan gambar yang bisa dibuka. Coba pilih JPG / PNG."));
-    i.src = URL.createObjectURL(file);
-  });
-  const max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-  const c = document.createElement("canvas");
-  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
-  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  URL.revokeObjectURL(img.src);
-  let q = 0.82, url = c.toDataURL("image/jpeg", q);
-  while (url.length > 1.9e6 && q > 0.4) url = c.toDataURL("image/jpeg", (q -= 0.12)); // jaga di bawah ~1,4 MB
-  return url;
-}
-$("proof").addEventListener("change", async () => {
-  const f = $("proof").files[0];
-  $("err").classList.add("hidden");
-  if (!f) return;
+app.use("/api", async (req, res, next) => {
+  if (CONFIG_ERROR) return res.status(500).json({ error: CONFIG_ERROR + " (cek Environment Variables di Vercel, lalu Redeploy)" });
   try {
-    proofData = await shrink(f);
-    $("proofPreview").src = proofData;
-    $("proofName").textContent = f.name;
-    $("dropEmpty").classList.add("hidden"); $("dropDone").classList.remove("hidden");
-    fuel();
+    await dbReady();
+    next();
   } catch (e) {
-    proofData = null; $("proof").value = "";
-    $("err").textContent = e.message; $("err").classList.remove("hidden");
+    console.error(e);
+    res.status(500).json({ error: "Gagal konek ke database Turso: " + e.message });
   }
 });
 
-$("form").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  $("err").classList.add("hidden");
-  if (payRequired && !proofData) {
-    $("err").textContent = "Upload bukti transfer dulu ya.";
-    $("err").classList.remove("hidden");
-    $("drop").scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
+const auth = (req, res, next) =>
+  req.session && req.session.user ? next() : res.status(401).json({ error: "Silakan login dulu." });
+
+const clean = (v, max = 120) => String(v || "").trim().slice(0, max);
+
+// Info acara (dipakai halaman depan)
+app.get("/api/event", async (req, res) => {
+  const used = await q.count();
+  res.json({
+    name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE, start: EVENT_START, quota: QUOTA, remaining: Math.max(0, QUOTA - used), closed: regClosed(), closeAt: Number.isNaN(REG_CLOSE_MS) ? null : new Date(REG_CLOSE_MS).toISOString(),
+    payment: { required: PAYMENT_REQUIRED, info: PAYMENT_INFO, price: TICKET_PRICE },
+  });
+});
+
+// Pendaftaran
+app.post("/api/register", async (req, res) => {
+  if (regClosed()) return res.status(403).json({ error: "Pendaftaran sudah ditutup." });
+  const p = {
+    id: crypto.randomBytes(9).toString("base64url"),
+    name: clean(req.body.name, 80),
+    email: clean(req.body.email, 120).toLowerCase(),
+    phone: clean(req.body.phone, 20).replace(/[^\d+]/g, ""),
+    institution: clean(req.body.institution, 100) || null,
+    angkatan: clean(req.body.angkatan, 20) || null,
+    created_at: now(),
+  };
+  if (p.name.length < 2) return res.status(400).json({ error: "Nama wajib diisi." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) return res.status(400).json({ error: "Format email tidak valid." });
+  if (p.phone.length < 9) return res.status(400).json({ error: "Nomor HP tidak valid." });
+  if (!p.institution || p.institution.length < 2) return res.status(400).json({ error: "Institusi wajib diisi." });
+  if (!p.angkatan) return res.status(400).json({ error: "Angkatan wajib diisi." });
+
+  let proof = null;
+  if (PAYMENT_REQUIRED) {
+    proof = readProof(req.body.proof);
+    if (!proof) return res.status(400).json({ error: "Upload gambar bukti transfer dulu (JPG/PNG, maksimal 2 MB)." });
   }
-  $("submit").disabled = true;
-  $("submit").textContent = "Lagi ngegas...";
-  try {
-    const r = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: $("name").value, email: $("email").value,
-        phone: $("phone").value, institution: $("institution").value, angkatan: $("angkatan").value,
-        proof: proofData,
-      }),
+
+  const r = await registerTx(p, proof);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+  res.json({ code: makeCode(p.id) });
+});
+
+// Gambar bukti transfer dikirim sebagai data URL ("data:image/jpeg;base64,...").
+// Dicek isi filenya beneran gambar, bukan cuma namanya.
+function readProof(dataUrl) {
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  if (!m) return null;
+  const buf = Buffer.from(m[2], "base64");
+  if (!buf.length || buf.length > PROOF_MAX_BYTES) return null;
+  const isJpeg = buf[0] === 0xff && buf[1] === 0xd8;
+  const isPng = buf.subarray(0, 4).toString("hex") === "89504e47";
+  const isWebp = buf.subarray(0, 4).toString() === "RIFF" && buf.subarray(8, 12).toString() === "WEBP";
+  if (!isJpeg && !isPng && !isWebp) return null;
+  return { mime: isJpeg ? "image/jpeg" : isPng ? "image/png" : "image/webp", data: buf };
+}
+
+// Data tiket (untuk halaman tiket peserta)
+app.get("/api/ticket", async (req, res) => {
+  const id = parseCode(req.query.code);
+  const p = id && (await q.byId(id));
+  if (!p) return res.status(404).json({ error: "Tiket tidak ditemukan." });
+  const qr = await QRCode.toDataURL(makeCode(p.id), { width: 600, margin: 1, errorCorrectionLevel: "M" });
+  res.json({
+    name: p.name,
+    institution: p.institution,
+    angkatan: p.angkatan,
+    ticketNo: p.short_code,
+    payStatus: p.pay_status,
+    event: { name: EVENT_NAME, date: EVENT_DATE, place: EVENT_PLACE },
+    qr,
+  });
+});
+
+// ---------- Login admin / petugas ----------
+const fails = new Map(); // ip -> {n, until}
+app.post("/api/login", (req, res) => {
+  const ip = req.ip;
+  const f = fails.get(ip);
+  if (f && f.n >= 8 && Date.now() < f.until)
+    return res.status(429).json({ error: "Terlalu banyak percobaan. Coba lagi 15 menit lagi." });
+
+  const user = clean(req.body.username, 40);
+  const pass = String(req.body.password || "");
+  const real = ACCOUNTS[user];
+  const ok =
+    real !== undefined &&
+    real.length === pass.length &&
+    crypto.timingSafeEqual(Buffer.from(real), Buffer.from(pass));
+  if (!ok) {
+    const n = (f && Date.now() < f.until ? f.n : 0) + 1;
+    fails.set(ip, { n, until: Date.now() + 15 * 60 * 1000 });
+    return res.status(401).json({ error: "Username atau password salah." });
+  }
+  fails.delete(ip);
+  req.session.user = user;
+  res.json({ user });
+});
+app.post("/api/logout", (req, res) => {
+  req.session = null;
+  res.json({ ok: true });
+});
+app.get("/api/me", (req, res) => res.json({ user: (req.session && req.session.user) || null }));
+
+// ---------- Scan ----------
+// Kode cadangan yang diketik petugas, misalnya "K7PXM" (huruf kecil, spasi & strip diabaikan).
+// Hanya diterima di scanner (wajib login), bukan di halaman tiket publik.
+async function parseShort(code) {
+  const s = String(code || "").toUpperCase().replace(/[\s-]/g, "");
+  if (s.length !== SHORT_LEN || ![...s].every((c) => SHORT_CHARS.includes(c))) return undefined;
+  const row = await q.byShort(s);
+  return row ? row.id : null;
+}
+
+app.post("/api/scan", auth, async (req, res) => {
+  const short = await parseShort(req.body.code);
+  if (short === null) return res.json({ status: "invalid", message: "Kode tiket tidak terdaftar." });
+  const id = short || parseCode(req.body.code);
+  if (!id) return res.json({ status: "invalid", message: "QR tidak dikenali / palsu." });
+  const p = await q.byId(id);
+  if (!p) return res.json({ status: "invalid", message: "Tiket tidak terdaftar." });
+  if (p.pay_status === "rejected")
+    return res.json({ status: "invalid", message: `${p.name}: pembayaran ditolak panitia. Arahkan ke meja registrasi.` });
+
+  const changed = await q.markScanned(now(), req.session.user, id);
+  if (!changed) {
+    const again = await q.byId(id);
+    return res.json({
+      status: "used",
+      message: "Tiket sudah dipakai.",
+      participant: { name: again.name, institution: again.institution, scannedAt: again.scanned_at, scannedBy: again.scanned_by },
     });
-    const d = await r.json().catch(() => ({ error: r.status === 413 ? "Gambar bukti terlalu besar, coba screenshot ulang." : "Gagal terhubung ke server, coba lagi." }));
-    if (!r.ok) throw new Error(d.error || "Gagal mendaftar.");
-    await zoom();
-    location.href = "/tiket#" + d.code;
-  } catch (e) {
-    $("err").textContent = e.message;
-    $("err").classList.remove("hidden");
-    $("submit").disabled = false;
-    $("submit").textContent = "Gas daftar 🏎️💨";
   }
+  const row = await q.byId(id);
+  res.json({
+    status: "ok",
+    message: "Silakan masuk.",
+    participant: { name: row.name, institution: row.institution, angkatan: row.angkatan, scannedAt: row.scanned_at, payStatus: row.pay_status },
+  });
 });
-</script>
-</body>
-</html>
+
+// ---------- Dashboard admin ----------
+app.get("/api/participants", auth, async (req, res) => {
+  const rows = (await q.all()).map((p) => ({
+    id: p.id,
+    code: makeCode(p.id),
+    short: p.short_code,
+    name: p.name,
+    email: p.email,
+    phone: p.phone,
+    institution: p.institution,
+    angkatan: p.angkatan,
+    createdAt: p.created_at,
+    scannedAt: p.scanned_at,
+    scannedBy: p.scanned_by,
+    hasProof: Boolean(p.has_proof),
+    payStatus: p.pay_status,
+    payBy: p.pay_by,
+    payAt: p.pay_at,
+  }));
+  const count = (st) => rows.filter((r) => r.payStatus === st).length;
+  const payment = {
+    required: PAYMENT_REQUIRED, price: TICKET_PRICE,
+    paid: count("paid"), pending: count("pending"), rejected: count("rejected"),
+  };
+  payment.revenue = payment.paid * TICKET_PRICE;
+  res.json({ quota: QUOTA, total: rows.length, scanned: await q.countScanned(), payment, rows });
+});
+
+app.post("/api/participants/:id/status", auth, async (req, res) => {
+  if (!(await q.byId(req.params.id))) return res.status(404).json({ error: "Peserta tidak ditemukan." });
+  if (req.body.scanned) await q.setScanned(now(), req.session.user + " (manual)", req.params.id);
+  else await q.resetOne(req.params.id);
+  res.json({ ok: true });
+});
+
+// Verifikasi bukti transfer oleh panitia
+app.post("/api/participants/:id/payment", auth, async (req, res) => {
+  const status = String(req.body.status || "");
+  if (!["paid", "rejected", "pending"].includes(status)) return res.status(400).json({ error: "Status pembayaran tidak dikenal." });
+  if (!(await q.byId(req.params.id))) return res.status(404).json({ error: "Peserta tidak ditemukan." });
+  const done = status !== "pending";
+  await q.setPay(status, done ? req.session.user : null, done ? now() : null, req.params.id);
+  res.json({ ok: true });
+});
+
+app.get("/api/proof/:id", auth, async (req, res) => {
+  const f = await q.proof(req.params.id);
+  if (!f) return res.status(404).json({ error: "Bukti transfer tidak ada." });
+  res.setHeader("Content-Type", f.mime);
+  res.setHeader("Cache-Control", "private, max-age=3600");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.end(Buffer.from(f.data));
+});
+
+app.post("/api/participants/reset-all", auth, async (req, res) => {
+  const n = await q.resetAll();
+  res.json({ ok: true, reset: n });
+});
+
+app.delete("/api/participants/:id", auth, async (req, res) => {
+  await q.remove(req.params.id);
+  res.json({ ok: true });
+});
+
+app.get("/api/export.xlsx", auth, async (req, res) => {
+  const PAY_LABEL = { paid: "Lunas", pending: "Menunggu cek", rejected: "Ditolak" };
+  const base = `${req.protocol}://${req.get("host")}`;
+  const list = (await q.all()).reverse();
+  const head = (ws, last) => {
+    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6E0011" } };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+    if (last) ws.autoFilter = { from: "A1", to: last + "1" };
+  };
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Peserta");
+  ws.columns = [
+    { header: "No", key: "no", width: 6 },
+    { header: "Kode Tiket", key: "ticket", width: 12 },
+    { header: "Nama", key: "name", width: 28 },
+    { header: "Email", key: "email", width: 30 },
+    { header: "No. HP", key: "phone", width: 16 },
+    { header: "Institusi", key: "institution", width: 26 },
+    { header: "Angkatan", key: "angkatan", width: 12 },
+    { header: "Waktu Daftar", key: "created", width: 20 },
+    { header: "Nominal", key: "price", width: 14 },
+    { header: "Status Pembayaran", key: "pay", width: 18 },
+    { header: "Dicek Oleh", key: "payBy", width: 16 },
+    { header: "Waktu Dicek", key: "payAt", width: 20 },
+    { header: "Bukti Transfer", key: "proof", width: 16 },
+    { header: "Status Masuk", key: "status", width: 14 },
+    { header: "Waktu Masuk", key: "scanned", width: 20 },
+    { header: "Discan Oleh", key: "by", width: 18 },
+  ];
+  list.forEach((p, i) => {
+    const row = ws.addRow({
+      no: i + 1,
+      ticket: p.short_code,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      institution: p.institution || "",
+      angkatan: p.angkatan || "",
+      created: p.created_at,
+      price: p.pay_status ? TICKET_PRICE : "",
+      pay: PAY_LABEL[p.pay_status] || "-",
+      payBy: p.pay_by || "",
+      payAt: p.pay_at || "",
+      proof: p.has_proof ? { text: "Lihat bukti", hyperlink: `${base}/api/proof/${encodeURIComponent(p.id)}` } : "-",
+      status: p.scanned_at ? "Sudah masuk" : "Belum",
+      scanned: p.scanned_at || "",
+      by: p.scanned_by || "",
+    });
+    if (p.has_proof) row.getCell("proof").font = { color: { argb: "FF2B5BD7" }, underline: true };
+    const color = { paid: "FFE1F3EA", pending: "FFFFF1D6", rejected: "FFFDE2E2" }[p.pay_status];
+    if (color) row.getCell("pay").fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+  });
+  ws.getColumn("price").numFmt = '"Rp"#,##0';
+  head(ws, "P");
+
+  // Ringkasan pembayaran
+  const sum = wb.addWorksheet("Ringkasan");
+  sum.columns = [{ header: "Keterangan", key: "k", width: 30 }, { header: "Jumlah", key: "v", width: 20 }];
+  const n = (st) => list.filter((p) => p.pay_status === st).length;
+  [
+    ["Harga tiket", TICKET_PRICE, true],
+    ["Total pendaftar", list.length],
+    ["Lunas", n("paid")],
+    ["Menunggu cek bukti", n("pending")],
+    ["Ditolak", n("rejected")],
+    ["Total pemasukan (lunas)", n("paid") * TICKET_PRICE, true],
+    ["Potensi pemasukan (lunas + menunggu)", (n("paid") + n("pending")) * TICKET_PRICE, true],
+    ["Sudah masuk venue", list.filter((p) => p.scanned_at).length],
+    ["Diekspor pada", now()],
+  ].forEach(([k, v, money]) => {
+    const r = sum.addRow({ k, v });
+    if (money) r.getCell("v").numFmt = '"Rp"#,##0';
+  });
+  head(sum);
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="peserta-${Date.now()}.xlsx"`);
+  await wb.xlsx.write(res);
+  res.end();
+});
+
+// Di Vercel, file ini dipakai lewat api/index.js; di komputer sendiri / VPS dijalankan langsung
+module.exports = app;
+if (runDirect) {
+  dbReady().then(() =>
+    app.listen(PORT, () => {
+      console.log(`Server jalan, buka http://localhost:${PORT}`);
+      console.log(`Panitia: klik "Kamu panitia? Masuk di sini" di bawah form untuk ke dashboard & scanner.`);
+    })
+  ).catch((e) => fail("Gagal membuka database: " + e.message));
+}
